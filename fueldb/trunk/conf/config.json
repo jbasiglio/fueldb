@@ -1,0 +1,34 @@
+{
+  "hosts": [
+	{
+	  "ssl":false,
+	  "host":"0.0.0.0",
+	  "port": 8101
+	},
+	{
+	  "ssl":true,
+	  "host":"0.0.0.0",
+	  "port": 8102,
+	  "key":"../conf/key.pem",
+	  "cert":"../conf/key-cert.pem"
+	}
+  ],
+  "id":1,
+  "login": true,
+  "inmemory": true,
+  "dbpath": "../root",
+  "broker": {
+	  "enable":true,
+	  "host":"localhost",
+	  "port":8201,
+	  "user":"admin",
+	  "password":"admin"
+  },
+  "balancer": {
+	  "enable":true,
+	  "host":"localhost",
+	  "port":8303,
+	  "user":"admin",
+	  "password":"admin"
+  }
+}
