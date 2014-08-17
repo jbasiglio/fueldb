@@ -1,0 +1,38 @@
+{
+  "name": "FuelDB",
+  "version": "0.0.1",
+  "description": "Realtime Database",
+  "license": "MIT",
+  "keywords": [
+    "FuelDB",
+    "Node.js",
+    "database",
+    "websocket",
+    "realtime"
+  ],
+  "author": {
+    "name": "Joris Basiglio",
+    "email": "joris.basiglio@gmail.com",
+    "url": "http://wonderfuel.com/"
+  },
+  "homepage": "http://wonderfuel.fr/#/fueldb/overview",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/unnamed38/fueldb.git"
+  },
+  "scripts": {
+	    "start": "node bin/server.js"
+	  },
+  "engines": {
+    "node": ">= 0.6.0",
+    "npm": ">= 1.0.0"
+  },
+
+  "dependencies": {
+    "ws": "*"
+  },
+  "devDependencies": {},
+  "bundleDependencies": [],
+  "private": true,
+  "main": "bin/server.js"
+}
