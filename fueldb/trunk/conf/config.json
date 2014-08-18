@@ -2,12 +2,12 @@
   "hosts": [
 	{
 	  "ssl":false,
-	  "host":"0.0.0.0",
+	  "host":"127.0.0.1",
 	  "port": 8101
 	},
 	{
 	  "ssl":true,
-	  "host":"0.0.0.0",
+	  "host":"127.0.0.1",
 	  "port": 8102,
 	  "key":"../conf/key.pem",
 	  "cert":"../conf/key-cert.pem"
@@ -18,7 +18,7 @@
   "inmemory": true,
   "dbpath": "../root",
   "broker": {
-	  "enable":true,
+	  "enable":false,
 	  "host":"localhost",
 	  "port":8201,
 	  "user":"admin",
