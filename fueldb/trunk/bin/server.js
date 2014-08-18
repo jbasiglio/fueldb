@@ -45,7 +45,7 @@ var _requestHandle = function(request, response) {
 	var url = urlParse.parse(request.url,true);
 	if(auth.verifyHTTP(url,request.method)){
 		response.writeHead(403, {"Content-Type": "application/json"});
-		response.write({"error": "You are not allowed"});
+		response.write(JSON.stringify({"error": "You are not allowed"}));
 		response.end();
 		return;
 	}
