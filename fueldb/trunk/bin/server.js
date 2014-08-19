@@ -79,7 +79,7 @@ var _requestHandle = function(request, response) {
 };
 
 var _httpsRequestHandle = function(request, response) {
-	if(request.method === "GET" && (request.url === "" || request.url === "/")){
+	if(request.method === "GET" && (request.url.split("?")[0] === "" || request.url.split("?")[0] === "/")){
 		var api = fs.readFileSync("../api/fueldb.js",'utf8');
 		api = api.replace("xxxxxxxx:xxxx",request.headers.host);
 		api = api.replace("\"yyyy\"","true");
