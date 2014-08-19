@@ -105,9 +105,15 @@ var _httpRequestHandle = function(request, response) {
 };
 
 var _wsRequestHandle = function(ws) {
+	var url = urlParse.parse(ws.upgradeReq.url,true);
+	if(auth.verifyWSURL(url)){
+		setTimeout(function(){
+			ws.close(4403,"Authentication failed");
+		},200);
+		return;
+	}
 	ws.id = uid.gen();
 	console.log("Connection open: "+ws.id);
-	ws.allowed = false;
 	ws.onPushed = function(msg) {
 		if(ws.readyState === WS_STATE.CONNECTING){
 			setTimeout(function() {
@@ -139,17 +145,6 @@ var _wsRequestHandle = function(ws) {
 		console.log("Connection lost: "+ws.id);
 		manager.removeAll(ws.id);
 	});
-	
-	var obj = {};
-	if(config.login){
-		obj.point = ".REQ_LOGIN";
-		obj.value = "A login is required";
-		ws.onPushed(obj);
-	}else{
-		ws.allowed = true;
-		obj.point = ".LOGIN_SUCC";
-		ws.onPushed(obj);
-	}
 };
 
 functions.subscribe = function subscribe(obj, ws) {

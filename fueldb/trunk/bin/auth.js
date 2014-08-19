@@ -14,10 +14,13 @@ var patternSub = new RegExp("^\\w+(\\.(\\w|\\*)+)*$");
 exports.verifyHTTP = function(url,method){
 	try{
 		var user = url.query.user;
+		if(!users[user]){
+			return true;
+		}
 		var signature = url.query.signature;
 		var check = url.href.split("&signature=")[0];
 		var hash = crypto.createHmac('sha256',users[user]).update(check).digest('hex');
-		return !(hash === signature);
+		return hash !== signature;
 	}catch(e){
 		console.log(e);
 		return true;
@@ -28,27 +31,24 @@ exports.verifyHTTP = function(url,method){
 	return false;
 };
 
-exports.verifyWS = function(obj,ws){
-
-	if(config.login && obj.type === "login"){
-		var hash = crypto.createHmac('sha256',obj.user).update(obj.password).digest('hex');
-		obj.password = "";
-		if(users[obj.user] === hash){
-			ws.allowed = true;
-			obj.point = ".LOGIN_SUCC";
-			obj.value = obj.user;
-		}else{
-			obj.point = ".LOGIN_FAIL";
+exports.verifyWSURL = function(url){
+	try{
+		var user = url.query.user;
+		if(!users[user]){
+			return true;
 		}
-		return obj;
+		var signature = url.query.signature;
+		var check = url.href.split("&signature=")[0];
+		var hash = crypto.createHmac('sha256',users[user]).update(check).digest('hex');
+		return hash !== signature;
+	}catch(e){
+		console.log(e);
+		return true;
 	}
+	return false;
+};
 
-	if(config.login && !ws.allowed){
-		obj.value = "You have to login first";
-		obj.point = ".ERROR";
-		return obj;
-	}
-	
+exports.verifyWS = function(obj,ws){
 	var test = !pattern.test(obj.point);
 	var spec = !(obj.type === "browse" && obj.point === "");
 	spec = spec && !(obj.type === "subscribe" && patternSub.test(obj.point));

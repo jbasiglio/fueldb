@@ -25,7 +25,7 @@
 	  "password":"admin"
   },
   "balancer": {
-	  "enable":true,
+	  "enable":false,
 	  "host":"localhost",
 	  "port":8303,
 	  "user":"admin",
