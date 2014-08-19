@@ -210,7 +210,7 @@ var FuelDB = function (uri, user, password, ssl) {
 	};
 
 	this.read = function (point, callback) {
-	/*
+	
 		var id = uid();
 		var listener = function (e) {
 			delete _events[id];
@@ -222,14 +222,15 @@ var FuelDB = function (uri, user, password, ssl) {
 		obj.point = point;
 		obj.id = id;
 		_send(obj);
-	*/	
+		/*
 		var r = new XMLHttpRequest(); 
 		r.open("GET", _httpUri+_computeURL(point), true);
 		r.onreadystatechange = function () {
 			if (r.readyState != 4 || r.status != 200) return; 
 			callback(JSON.parse(r.responseText));
 		};
-		r.send("value="+value);
+		//r.send("");
+		*/
 	};
 
 	this.browse = function (point, callback) {
