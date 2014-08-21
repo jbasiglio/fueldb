@@ -33,7 +33,22 @@ HTTP_METHOD.PUT = "set";
 HTTP_METHOD.DELETE = "remove";
 HTTP_METHOD.POST = "browse";
 
-var _requestHandle = function(request, response) {
+var _requestHandle = function(request, response,ssl) {
+	var url = request.url.split("?")[0].split("/");
+	if(request.method === "GET" && (url[1] === "api")){
+		try{
+			var api = fs.readFileSync(".."+url.join("/"),'utf8');
+			api = api.replace("xxxxxxxx:xxxx",request.headers.host);
+			api = api.replace("\"yyyy\"",ssl);
+			response.writeHead(200, {"Content-Type": "text/javascript"});
+			response.write(api);
+		}catch(e){
+			response.writeHead(404);
+		} finally {
+			response.end();
+			return;
+		}
+	}
 	if(request.method === "OPTIONS"){
 		response.writeHead(200, {"Allow": "HEAD,GET,PUT,DELETE,OPTIONS",
 			"Access-Control-Allow-Origin" : "*",
@@ -42,7 +57,7 @@ var _requestHandle = function(request, response) {
 		response.end();
 		return;
 	}
-	var url = urlParse.parse(request.url,true);
+	url = urlParse.parse(request.url,true);
 	if(auth.verifyHTTP(url,request.method)){
 		response.writeHead(403, {"Content-Type": "application/json"});
 		response.write(JSON.stringify({"error": "You are not allowed"}));
@@ -79,29 +94,11 @@ var _requestHandle = function(request, response) {
 };
 
 var _httpsRequestHandle = function(request, response) {
-	if(request.method === "GET" && (request.url.split("?")[0] === "" || request.url.split("?")[0] === "/")){
-		var api = fs.readFileSync("../api/fueldb.js",'utf8');
-		api = api.replace("xxxxxxxx:xxxx",request.headers.host);
-		api = api.replace("\"yyyy\"","true");
-		response.writeHead(200, {"Content-Type": "text/javascript"});
-		response.write(api);
-		response.end();
-		return;
-	}
-	_requestHandle(request, response);
+	_requestHandle(request, response,"true");
 };
 
 var _httpRequestHandle = function(request, response) {
-	if(request.method === "GET" && (request.url === "" || request.url === "/")){
-		var api = fs.readFileSync("../api/fueldb.js",'utf8');
-		api = api.replace("xxxxxxxx:xxxx",request.headers.host);
-		api = api.replace("\"yyyy\"","false");
-		response.writeHead(200, {"Content-Type": "text/javascript"});
-		response.write(api);
-		response.end();
-		return;
-	}
-	_requestHandle(request, response);
+	_requestHandle(request, response,"false");
 };
 
 var _wsRequestHandle = function(ws) {
@@ -163,6 +160,7 @@ functions.unsubscribe = function unsubscribe(obj, ws) {
 };
 
 functions.set = function set(obj, ws) {
+	delete obj.type;
 	obj.old = db.read(obj.point);
 	db.write(obj.point, obj.value);
 	obj.date = new Date().toISOString();
