@@ -129,10 +129,6 @@ var FuelDB = function (target) {
 		var uuid = uid();
 		if (_subscribeEvent[point] === undefined) {
 			_subscribeEvent[point] = {};
-			var obj = {};
-			obj.type = "subscribe";
-			obj.point = point;
-			_send(obj);
 		}
 		if (_events[point] === undefined) {
 			_events[point] = {};
@@ -142,6 +138,10 @@ var FuelDB = function (target) {
 			listener : listener,
 			cb : callback
 		};
+		var obj = {};
+		obj.type = "subscribe";
+		obj.point = point;
+		_send(obj);
 		return uuid;
 	};
 	var _subscribe = this.subscribe;
