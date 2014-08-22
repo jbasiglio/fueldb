@@ -3,7 +3,7 @@ FuelDB
 
 A realtime database using websockets
 
-You can go to this [website](http://wonderfuel.fr/#/fueldb/overview) to read the full documentation and get started to use it
+You can go to this [website](https://wonderfuel.fr/#/fueldb/overview) to read the full documentation and get started to use it
 
 ## Related module ##
 
