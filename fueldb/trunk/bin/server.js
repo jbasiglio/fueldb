@@ -3,13 +3,15 @@
  * Copyright(c) 2014 Joris Basiglio <joris.basiglio@wonderfuel.io>
  * MIT Licensed
  */
-
-var manager = require('./manager.js');
-var uid = require('./uid.js');
-var config = require('../conf/config.json');
-var auth = require('./auth.js');
-var db = config.inmemory ? require('./memdb.js') : require('./fsdb.js');
+var path = require("path");
+var binDir = path.dirname(require.main.filename)+'/';
+var manager = require(binDir+'./manager.js');
+var uid = require(binDir+'./uid.js');
+var config = require(binDir+'../conf/config.json');
+var auth = require(binDir+'./auth.js');
+var db = config.inmemory ? require(binDir+'./memdb.js') : require(binDir+'./fsdb.js');
 var WebSocket = require('ws');
+var os = require("os");
 var WebSocketServer = WebSocket.Server;
 var fs = require('fs');
 var urlParse = require('url');
@@ -18,6 +20,8 @@ var http = require('http');
 var https = require('https');
 
 var functions = {};
+
+var cpus = os.cpus();
 
 var clustFct = ["set","remove"];
 
@@ -111,6 +115,7 @@ var _wsRequestHandle = function(ws) {
 	}
 	ws.id = uid.gen();
 	console.log("Connection open: "+ws.id);
+	_updateConnection(true);
 	ws.onPushed = function(msg) {
 		if(ws.readyState === WS_STATE.CONNECTING){
 			setTimeout(function() {
@@ -140,8 +145,26 @@ var _wsRequestHandle = function(ws) {
 	});
 	ws.on('close', function(code, message) {
 		console.log("Connection lost: "+ws.id);
+		_updateConnection(false);
 		manager.removeAll(ws.id);
 	});
+};
+
+var _updatePoint = function(point, value){
+	var obj = {};
+	obj.type = "set";
+	obj.point = point;
+	obj.value = value;
+	functions.set(obj,null);
+};
+
+var _updateConnection = function(inc){
+	var count = db.read("fueldb.connection").value;
+	if(!count){
+		count = 0;
+	}
+	count += (inc ? 1 : -1);
+	_updatePoint("fueldb.connection",count);
 };
 
 functions.subscribe = function subscribe(obj, ws) {
@@ -256,3 +279,14 @@ var _connectBalancer = function(){
 if(config.balancer.enable){
 	_connectBalancer();
 }
+
+setInterval(function(){
+	var avg = os.loadavg();
+	var avgCpu = {
+			"1":(avg[0]/cpus.length)*100,
+			"5":(avg[1]/cpus.length)*100,
+			"15":(avg[2]/cpus.length)*100
+	};
+	_updatePoint("fueldb.cpu.load",avgCpu);
+},5000);
+

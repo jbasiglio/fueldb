@@ -17,7 +17,6 @@ var FuelDB = function (target) {
 	var _subscribeEvent = {};
 	var _events = {};
 	var _websocket;
-	var _currentUser;
 	var _onConnect;
 	var _onDisconnect;
 	var _callPattern = new RegExp("^\\w+(\\.\\w+)*$");

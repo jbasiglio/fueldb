@@ -3,10 +3,12 @@
  * Copyright(c) 2014 Joris Basiglio <joris.basiglio@wonderfuel.io>
  * MIT Licensed
  */
-
-var config = require('../conf/config.json');
+var path = require("path");
+var binDir = path.dirname(require.main.filename)+'/';
+var config = require(binDir+'../conf/config.json');
+var users = require(binDir+'../conf/users.json');
 var crypto = require('crypto');
-var users = require('../conf/users.json');
+
 
 var pattern = new RegExp("^\\w+(\\.\\w+)*$");
 var patternSub = new RegExp("^\\w+(\\.(\\w|\\*)+)*$");

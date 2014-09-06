@@ -4,7 +4,9 @@
  * MIT Licensed
  */
 
-var config = require('../conf/config.json');
+var path = require("path");
+var binDir = path.dirname(require.main.filename)+'/';
+var config = require(binDir+'../conf/config.json');
 var dbpath = config.dbpath;
 var fs = require('fs');
 
