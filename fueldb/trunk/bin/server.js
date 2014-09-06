@@ -41,7 +41,7 @@ var _requestHandle = function(request, response,ssl) {
 	var url = request.url.split("?")[0].split("/");
 	if(request.method === "GET" && (url[1] === "api")){
 		try{
-			var api = fs.readFileSync(".."+url.join("/"),'utf8');
+			var api = fs.readFileSync(binDir+".."+url.join("/"),'utf8');
 			api = api.replace("xxxxxxxx:xxxx",request.headers.host);
 			api = api.replace("\"yyyy\"",ssl);
 			response.writeHead(200, {"Content-Type": "text/javascript"});

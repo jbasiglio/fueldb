@@ -21,7 +21,7 @@
     "url": "https://github.com/unnamed38/fueldb.git"
   },
   "scripts": {
-	    "start": "nohup node bin/server.js &"
+	    "start": "node bin/server.js"
 	  },
   "engines": {
     "node": ">= 0.6.0",
