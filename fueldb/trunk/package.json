@@ -12,7 +12,7 @@
   ],
   "author": {
     "name": "Joris Basiglio",
-    "email": "joris.basiglio@gmail.com",
+    "email": "joris.basiglio@wonderfuel.io",
     "url": "https://wonderfuel.io/"
   },
   "homepage": "https://www.wonderfuel.io/#/fueldb/overview",
@@ -21,7 +21,7 @@
     "url": "https://github.com/unnamed38/fueldb.git"
   },
   "scripts": {
-	    "start": "node bin/server.js"
+	    "start": "nohup node bin/server.js &"
 	  },
   "engines": {
     "node": ">= 0.6.0",
