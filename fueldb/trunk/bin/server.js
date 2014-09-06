@@ -219,8 +219,8 @@ config.hosts.forEach(function(host){
 	var httpServer;
 	if (host.ssl) {
 		var options = {
-			key : fs.readFileSync(host.key),
-			cert : fs.readFileSync(host.cert)
+			key : fs.readFileSync(binDir+host.key),
+			cert : fs.readFileSync(binDir+host.cert)
 		};
 		httpServer = https.createServer(options,_httpsRequestHandle);
 	}else{
