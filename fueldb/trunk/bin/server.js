@@ -11,6 +11,7 @@ var config = require(binDir+'../conf/config.json');
 var auth = require(binDir+'./auth.js');
 var db = config.inmemory ? require(binDir+'./memdb.js') : require(binDir+'./fsdb.js');
 var WebSocket = require('ws');
+var net = require('net');
 var os = require("os");
 var WebSocketServer = WebSocket.Server;
 var fs = require('fs');
@@ -20,6 +21,7 @@ var http = require('http');
 var https = require('https');
 
 var functions = {};
+var serverType = {};
 
 var cpus = os.cpus();
 
@@ -128,7 +130,7 @@ var _wsRequestHandle = function(ws) {
 	ws.on('message', function(message) {
 		var obj = JSON.parse(message);
 		obj.point = obj.point ? obj.point.trim() : "";
-		if (auth.verifyWS(obj,ws)) {
+		if (auth.verifyWS(obj)) {
 			ws.onPushed(obj);
 			return;
 		}
@@ -147,6 +149,44 @@ var _wsRequestHandle = function(ws) {
 		console.log("Connection lost: "+ws.id);
 		_updateConnection(false);
 		manager.removeAll(ws.id);
+	});
+};
+
+var _socketRequestHandle = function(socket) {
+	socket.id = uid.gen();
+	console.log("Connection open: "+socket.id);
+	_updateConnection(true);
+	socket.onPushed = function(msg) {
+        socket.write(JSON.stringify(msg)+'\n');
+    };
+	socket.on('data', function(message) {
+        var obj;
+        try{
+            obj = JSON.parse(message);
+        }catch(ex){
+            obj = {point:".ERROR",value:"Message format is not correct"};
+            socket.onPushed(obj);
+            return;
+        }
+		obj.point = obj.point ? obj.point.trim() : "";
+		if (auth.verifyWS(obj)) {
+			socket.onPushed(obj);
+			return;
+		}
+		if (obj.type in functions && typeof functions[obj.type] === "function") {
+			if(wscBroker && clustFct.indexOf(obj.type) !== -1){
+				wscBroker.dispatch(message);
+			}
+			functions[obj.type](obj, socket);
+		}
+	});
+	socket.on('error', function(message) {
+		console.log("Error: "+message);
+	});
+	socket.on('close', function(code, message) {
+		console.log("Connection lost: "+socket.id);
+		_updateConnection(false);
+		manager.removeAll(socket.id);
 	});
 };
 
@@ -215,8 +255,8 @@ functions.remove = function remove(obj, ws) {
 	manager.removeCascade(obj.point);
 };
 
-config.hosts.forEach(function(host){
-	var httpServer;
+serverType.ws = function(host){
+    var httpServer;
 	if (host.ssl) {
 		var options = {
 			key : fs.readFileSync(binDir+host.key),
@@ -231,12 +271,39 @@ config.hosts.forEach(function(host){
 	});
 	wsServer.on('connection', _wsRequestHandle);
 	httpServer.listen(host.port, host.host);
-	console.log('Listening for HTTP'+(host.ssl?'S':'')+'/WS'+(host.ssl?'S':'')+' at IP ' + host.host + ' on port ' + host.port);
+	console.log('Listening for HTTP'+(host.ssl?'S':'')+'/WS'
+        +(host.ssl?'S':'')+' at IP ' + host.host + ' on port ' + host.port);
+};
+
+serverType.socket = function(host){
+    var server = net.createServer(_socketRequestHandle);
+    server.on('error', function (e) {
+      if (e.code == 'EADDRINUSE') {
+        console.log('Address in use, retrying...');
+        setTimeout(function () {
+          server.close();
+          server.listen(host.port, host.host);
+        }, 1000);
+      }
+    });
+    server.listen(host.port, host.host, function() { //'listening' listener
+        console.log('Listening for Socket'+(host.ssl?' over SSL':'')
+        +' at IP ' + host.host + ' on port ' + host.port);
+    });
+};
+
+config.hosts.forEach(function(host){
+    if (host.type in serverType && typeof serverType[host.type] === "function") {
+        serverType[host.type](host);
+    }
 });
+
+//****** Clustering ******//
 
 var wscBroker;
 var _connectBroker = function(){
-	wscBroker = new WebSocket('ws://'+config.broker.host+':'+config.broker.port+auth.computeBrokerURL());
+	wscBroker = new WebSocket('ws://'+config.broker.host+':'+config.broker.port
+        +auth.computeBrokerURL());
 	wscBroker.on('open', function() {
 		console.log("connected to broker");
 	});
@@ -265,7 +332,8 @@ if(config.broker.enable){
 }
 var wscBalancer;
 var _connectBalancer = function(){
-	wscBalancer = new WebSocket('ws://' + config.balancer.host + ':' + config.balancer.port + auth.computeBalancerURL());
+	wscBalancer = new WebSocket('ws://' + config.balancer.host + ':' 
+        + config.balancer.port + auth.computeBalancerURL());
 	wscBalancer.on('open', function() {
 		console.log("connected to balancer");
 	});
