@@ -1,11 +1,19 @@
 {
   "hosts": [
 	{
+      "type":"ws",    
 	  "ssl":false,
 	  "host":"127.0.0.1",
 	  "port": 8101
 	},
+    {
+      "type":"socket",
+	  "ssl":false,
+	  "host":"127.0.0.1",
+	  "port": 8103
+	},
 	{
+      "type":"ws",
 	  "ssl":true,
 	  "host":"127.0.0.1",
 	  "port": 8102,
