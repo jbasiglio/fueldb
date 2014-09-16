@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Wonderfuel FuelDB | Monitor Application</title>
+</head>
+<body>
+    <h1 style="text-align: center;">FuelDB Monitor Application</h1>
+
+    <br />
+    <div>
+        <table>
+            <thead>
+                <td>Type</td>
+                <td>Value</td>
+                <td>Previous</td>
+            </thead>
+            <tr>
+                <td>Load CPU:</td>
+                <td><input id="loadID" disabled="true"/></td>
+                <td><input id="oldloadID" disabled="true"/></td>
+            </tr>
+            <tr>
+                <td>Connections:</td>
+                <td><input id="connectionID" disabled="true"/></td>
+                <td><input id="oldconnectionID" disabled="true"/></td>
+            </tr>
+            <tr>
+                <td>IOPS:</td>
+                <td><input id="iopsID" disabled="true"/></td>
+                <td><input id="oldiopsID" disabled="true"/></td>
+            </tr>
+        </table>
+        <br/>
+        <a href="/api/burst.html" target="_blank">Burst Test</a>
+    </div>
+    <script type="text/javascript" src="/api/fueldb.js"></script>
+    <script type="text/javascript">
+        var opt = {
+            user: "admin",
+            password: "admin"
+        };
+        var fuelDB = new FuelDB(opt);
+        
+        fuelDB.subscribe("fueldb.cpu.load", function (obj) {
+            loadID.value = obj.value["1"];
+            oldloadID.value = obj.old.value ? obj.old.value["1"] : "";
+        });
+        fuelDB.subscribe("fueldb.connection", function (obj) {
+            connectionID.value = obj.value;
+            oldconnectionID.value = obj.old.value;
+        });
+        fuelDB.subscribe("fueldb.iops", function (obj) {
+            iopsID.value = obj.value;
+            oldiopsID.value = obj.old.value;
+        });
+    </script>
+</body>
+</html>
+
+
