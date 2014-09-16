@@ -3,19 +3,19 @@
 	{
       "type":"ws",    
 	  "ssl":false,
-	  "host":"127.0.0.1",
+	  "host":"0.0.0.0",
 	  "port": 8101
 	},
     {
       "type":"socket",
 	  "ssl":false,
-	  "host":"127.0.0.1",
+	  "host":"0.0.0.0",
 	  "port": 8103
 	},
     {
       "type":"socket",
 	  "ssl":true,
-	  "host":"127.0.0.1",
+	  "host":"0.0.0.0",
 	  "port": 8104,
       "key":"../conf/key.pem",
 	  "cert":"../conf/key-cert.pem"
@@ -23,7 +23,7 @@
 	{
       "type":"ws",
 	  "ssl":true,
-	  "host":"127.0.0.1",
+	  "host":"0.0.0.0",
 	  "port": 8102,
 	  "key":"../conf/key.pem",
 	  "cert":"../conf/key-cert.pem"

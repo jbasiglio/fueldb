@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Wonderfuel FuelDB | Burst Test</title>
+</head>
+<body>
+    <h1 style="text-align: center;">FuelDB Burst Test</h1>
+    
+    <br />
+    <div>
+        <table id="table">
+            <thead>
+                <td>Interval</td>
+                <td>Point</td>
+                <td>Value</td>
+                <td>Action</td>
+            </thead>
+        </table>
+        <input type="button" value="Add" onclick="add()"/>
+    </div>
+    <script type="text/javascript" src="/api/fueldb.js"></script>
+    <script type="text/javascript">
+        var opt = {
+            user: "admin",
+            password: "admin"
+        };
+        var fuelDB = new FuelDB(opt);
+        var counter = 0;
+        function add(){
+            var input
+            counter++;
+            var row = table.insertRow(table.rows.length);
+            row.id = counter;
+            var interval = row.insertCell(0);
+            input = document.createElement("input");
+            input.id="inter_"+counter;
+            input.type = "number";
+            interval.appendChild(input)
+            var point = row.insertCell(1);
+            input = document.createElement("input");
+            input.id="point_"+counter;
+            point.appendChild(input)
+            var value = row.insertCell(2);
+            input = document.createElement("input");
+            input.id="value_"+counter;
+            input.disabled = true;
+            //TODO
+            value.appendChild(input)
+            var action = row.insertCell(3);
+            input = document.createElement("input");
+            input.id="action_"+counter;
+            input.type = "button";
+            input.value = "Start";
+            //TODO
+            input.onclick = function(e){
+                var elem = e.srcElement
+                var id = elem.id.split("_")[1];
+                if(elem.state_write){
+                    elem.value = "Start";
+                    clearInterval(elem.state_write);
+                    delete elem.state_write;
+                    fuelDB.unsubscribe(elem.subs_point,elem.state_subs);
+                }else{
+                    var inter_elem = document.getElementById("inter_"+id);
+                    var point_elem = document.getElementById("point_"+id);
+                    var value_elem = document.getElementById("value_"+id);
+                    var interValue = parseInt(inter_elem.value);
+                    var pointValue = point_elem.value;
+                    elem.value = "Stop";
+                    elem.subs_point = pointValue;
+                    elem.state_write = setInterval(function(){
+                        fuelDB.write(pointValue,rand());
+                    },interValue);
+                    elem.state_subs = fuelDB.subscribe(pointValue,function(obj){
+                        value_elem.value = obj.value;
+                    });
+                }
+            }
+            action.appendChild(input)
+        }
+        function rand() {
+            return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
+        }
+    </script>
+</body>
+</html>
