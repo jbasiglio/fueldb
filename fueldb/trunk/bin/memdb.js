@@ -5,7 +5,7 @@
  */
 
 var db = {};
-var reservedPoint = [".VALUE",".DATE"];
+var reservedPoint = [".VALUE",".DATE",".USER"];
 
 exports.read = function(path){
 	var points = path.split(".");
@@ -15,7 +15,8 @@ exports.read = function(path){
 	}
 	var obj = {
 		value:(point && point[".VALUE"]) ? point[".VALUE"] : "",
-		date:(point && point[".DATE"]) ? point[".DATE"] : ""
+		date:(point && point[".DATE"]) ? point[".DATE"] : "",
+		user:(point && point[".USER"]) ? point[".USER"] : ""
 	};
 	return obj;
 };
@@ -35,7 +36,7 @@ exports.remove = function(path){
 	}
 };
 
-exports.write = function(path, value){
+exports.write = function(path, value, user){
 	var points = path.split(".");
 	if(db[points[0]] == null){
 		db[points[0]] = {};
@@ -49,6 +50,7 @@ exports.write = function(path, value){
 	}
 	point[".VALUE"] = value;
 	point[".DATE"] = new Date().toISOString();
+    point[".USER"] = user;
 };
 
 exports.browse = function(path){

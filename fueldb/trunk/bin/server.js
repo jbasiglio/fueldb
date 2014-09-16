@@ -12,6 +12,7 @@ var auth = require(binDir+'./auth.js');
 var db = config.inmemory ? require(binDir+'./memdb.js') : require(binDir+'./fsdb.js');
 var WebSocket = require('ws');
 var net = require('net');
+var tls = require('tls')
 var os = require("os");
 var WebSocketServer = WebSocket.Server;
 var fs = require('fs');
@@ -39,14 +40,18 @@ HTTP_METHOD.PUT = "set";
 HTTP_METHOD.DELETE = "remove";
 HTTP_METHOD.POST = "browse";
 
-var _requestHandle = function(request, response,ssl) {
+var _requestHandle = function(request, response, ssl) {
 	var url = request.url.split("?")[0].split("/");
 	if(request.method === "GET" && (url[1] === "api")){
 		try{
 			var api = fs.readFileSync(binDir+".."+url.join("/"),'utf8');
-			api = api.replace("xxxxxxxx:xxxx",request.headers.host);
-			api = api.replace("\"yyyy\"",ssl);
-			response.writeHead(200, {"Content-Type": "text/javascript"});
+            if(url.join("/").indexOf(".js") !== -1){
+                api = api.replace("xxxxxxxx:xxxx",request.headers.host);
+                api = api.replace("\"yyyy\"",ssl);
+                response.writeHead(200, {"Content-Type": "text/javascript"});
+            }else{
+                response.writeHead(200, {"Content-Type": "text/html"});
+            }
 			response.write(api);
 		}catch(e){
 			response.writeHead(404);
@@ -73,6 +78,7 @@ var _requestHandle = function(request, response,ssl) {
 	var path = url.pathname.split("/");
 	path = path.slice(1,path.length).join(".");
 	var obj ={point:path};
+    obj.user = url.query.user;
 	var body = "";
 	request.on('data', function (data) {
         body += data;
@@ -100,11 +106,11 @@ var _requestHandle = function(request, response,ssl) {
 };
 
 var _httpsRequestHandle = function(request, response) {
-	_requestHandle(request, response,"true");
+	_requestHandle(request, response, "true");
 };
 
 var _httpRequestHandle = function(request, response) {
-	_requestHandle(request, response,"false");
+	_requestHandle(request, response, "false");
 };
 
 var _wsRequestHandle = function(ws) {
@@ -116,6 +122,7 @@ var _wsRequestHandle = function(ws) {
 		return;
 	}
 	ws.id = uid.gen();
+    ws.user = url.query.user;
 	console.log("Connection open: "+ws.id);
 	_updateConnection(true);
 	ws.onPushed = function(msg) {
@@ -124,11 +131,14 @@ var _wsRequestHandle = function(ws) {
 				ws.onPushed(msg);
 			}, 200);
 		} else if(ws.readyState === WS_STATE.OPEN) {
+            _updateIOPS();
 			ws.send(JSON.stringify(msg));
 		}
 	};
 	ws.on('message', function(message) {
+        _updateIOPS();
 		var obj = JSON.parse(message);
+        obj.user = ws.user;
 		obj.point = obj.point ? obj.point.trim() : "";
 		if (auth.verifyWS(obj)) {
 			ws.onPushed(obj);
@@ -157,9 +167,11 @@ var _socketRequestHandle = function(socket) {
 	console.log("Connection open: "+socket.id);
 	_updateConnection(true);
 	socket.onPushed = function(msg) {
-        socket.write(JSON.stringify(msg)+'\n');
+        _updateIOPS();
+        socket.write(JSON.stringify(msg)+'\3'); //End Of Text (EOT)
     };
 	socket.on('data', function(message) {
+        _updateIOPS();
         var obj;
         try{
             obj = JSON.parse(message);
@@ -198,15 +210,6 @@ var _updatePoint = function(point, value){
 	functions.set(obj,null);
 };
 
-var _updateConnection = function(inc){
-	var count = db.read("fueldb.connection").value;
-	if(!count){
-		count = 0;
-	}
-	count += (inc ? 1 : -1);
-	_updatePoint("fueldb.connection",count);
-};
-
 functions.subscribe = function subscribe(obj, ws) {
 	manager.add(obj.point, ws);
 	var tmp = db.read(obj.point);
@@ -225,7 +228,7 @@ functions.unsubscribe = function unsubscribe(obj, ws) {
 functions.set = function set(obj, ws) {
 	delete obj.type;
 	obj.old = db.read(obj.point);
-	db.write(obj.point, obj.value);
+	db.write(obj.point, obj.value, obj.user);
 	obj.date = new Date().toISOString();
 	manager.update(obj.point, obj);
 };
@@ -276,7 +279,17 @@ serverType.ws = function(host){
 };
 
 serverType.socket = function(host){
-    var server = net.createServer(_socketRequestHandle);
+    
+    var server;
+    if (host.ssl) {
+		var options = {
+			key : fs.readFileSync(binDir+host.key),
+			cert : fs.readFileSync(binDir+host.cert)
+		};
+		server = tls.createServer(options,_socketRequestHandle);
+	}else{
+		server = net.createServer(_socketRequestHandle);
+	}
     server.on('error', function (e) {
       if (e.code == 'EADDRINUSE') {
         console.log('Address in use, retrying...');
@@ -347,7 +360,11 @@ var _connectBalancer = function(){
 if(config.balancer.enable){
 	_connectBalancer();
 }
+//****** End Clustering ******//
 
+//****** Performance ******//
+
+//****** CPU Load ******//
 setInterval(function(){
 	var avg = os.loadavg();
 	var avgCpu = {
@@ -358,3 +375,24 @@ setInterval(function(){
 	_updatePoint("fueldb.cpu.load",avgCpu);
 },5000);
 
+//****** Current Connections ******//
+var _updateConnection = function(inc){
+	var count = db.read("fueldb.connection").value;
+	if(!count){
+		count = 0;
+	}
+	count += (inc ? 1 : -1);
+	_updatePoint("fueldb.connection",count);
+};
+
+//****** IOPS ******//
+var iops = 0;
+var _updateIOPS = function(){
+    iops++;
+};
+setInterval(function(){
+	_updatePoint("fueldb.iops",iops+"");
+    iops = 0;
+},1000);
+
+//****** End Performance ******//
