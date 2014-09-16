@@ -12,6 +12,14 @@
 	  "host":"127.0.0.1",
 	  "port": 8103
 	},
+    {
+      "type":"socket",
+	  "ssl":true,
+	  "host":"127.0.0.1",
+	  "port": 8104,
+      "key":"../conf/key.pem",
+	  "cert":"../conf/key-cert.pem"
+	},
 	{
       "type":"ws",
 	  "ssl":true,
@@ -22,6 +30,7 @@
 	}
   ],
   "id":1,
+  "debug":true,
   "login": true,
   "inmemory": true,
   "dbpath": "../root",
