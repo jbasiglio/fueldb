@@ -38,7 +38,7 @@ var HTTP_METHOD = {};
 HTTP_METHOD.GET = "read";
 HTTP_METHOD.PUT = "set";
 HTTP_METHOD.DELETE = "remove";
-HTTP_METHOD.POST = "browse";
+HTTP_METHOD.GET_BROWSE = "browse";
 
 var _requestHandle = function(request, response, ssl) {
 	var url = request.url.split("?")[0].split("/");
@@ -69,12 +69,17 @@ var _requestHandle = function(request, response, ssl) {
 		return;
 	}
 	url = urlParse.parse(request.url,true);
-	if(auth.verifyHTTP(url,request.method)){
-		response.writeHead(403, {"Content-Type": "application/json"});
-		response.write(JSON.stringify({"error": "You are not allowed"}));
+    try{
+        auth.verifyHTTP(url,request.method);
+    }catch(e){
+        response.writeHead(403, {"Content-Type": "application/json"});
+		response.write(JSON.stringify({"error": e}));
 		response.end();
 		return;
-	}
+    }
+    if(request.method === "GET" && url.query.type === "browse"){
+        request.method = "GET_BROWSE";
+    }
 	var path = url.pathname.split("/");
 	path = path.slice(1,path.length).join(".");
 	var obj ={point:path};
@@ -115,12 +120,14 @@ var _httpRequestHandle = function(request, response) {
 
 var _wsRequestHandle = function(ws) {
 	var url = urlParse.parse(ws.upgradeReq.url,true);
-	if(auth.verifyWSURL(url)){
-		setTimeout(function(){
-			ws.close(4403,"Authentication failed");
+    try{
+        auth.verifyWSURL(url)
+    }catch(e){
+        setTimeout(function(){
+			ws.close(4403,e+"");
 		},200);
-		return;
-	}
+		return;    
+    }
 	ws.id = uid.gen();
     ws.user = url.query.user;
 	console.log("Connection open: "+ws.id);
