@@ -8,6 +8,7 @@ var binDir = path.dirname(require.main.filename)+'/';
 var manager = require(binDir+'./manager.js');
 var uid = require(binDir+'./uid.js');
 var config = require(binDir+'../conf/config.json');
+var package = require(binDir+'../package.json');
 var auth = require(binDir+'./auth.js');
 var db = config.inmemory ? require(binDir+'./memdb.js') : require(binDir+'./fsdb.js');
 var WebSocket = require('ws');
@@ -214,6 +215,7 @@ var _updatePoint = function(point, value){
 	obj.type = "set";
 	obj.point = point;
 	obj.value = value;
+    obj.user = "system";
 	functions.set(obj,null);
 };
 
@@ -241,9 +243,11 @@ functions.set = function set(obj, ws) {
 };
 
 functions.read = function read(obj, ws) {
+    delete obj.user;
 	var tmp = db.read(obj.point);
 	obj.value = tmp.value;
 	obj.date = tmp.date;
+    obj.user = tmp.user;
 	if(ws){
 		ws.onPushed(obj);
 	}else{
@@ -401,5 +405,8 @@ setInterval(function(){
 	_updatePoint("fueldb.iops",iops+"");
     iops = 0;
 },1000);
+
+//****** Version ******//
+_updatePoint("fueldb.version",package.version);
 
 //****** End Performance ******//

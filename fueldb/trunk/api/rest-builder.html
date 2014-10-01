@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Wonderfuel FuelDB | REST Builder</title>
+</head>
+<body>
+    <h1 style="text-align: center;">FuelDB REST Builder</h1>
+    
+    <br />
+    <div>
+        <input id="user" placeholder="User" type="text" onkeyup="build()"/>
+        <input id="password" placeholder="Password" type="password" onkeyup="build()"/>
+        <br/>
+        Point: <input id="point" placeholder="point" type="text" onkeyup="build()"/>
+        <input id="read" type="radio" onclick="check('browse')" checked/>Read
+        <input id="browse" type="radio" onclick="check('read')" />Browse
+        <br/>
+        <a id="link" href="#" target="_blank">Fill the fields</a>
+    </div>
+    <script type="text/javascript" src="/api/fueldb.js"></script>
+    <script type="text/javascript">
+        var pattern = new RegExp("^\\w+(\\.\\w+)*$");
+        function computeURL(point,browse,user,password){
+            if(!browse && (!point || point == "")){
+                throw "Point can't be empty for a read request";
+            }
+            if(!pattern.test(point) && !(browse && point == "")){
+                throw "Point is not valid";
+            }
+            if(point.indexOf("api.") == 0){
+                throw "'api' is a reserved point";
+            }
+            var toSign = "/"+(point ? point.split(".").join("/"):"")+"?timestamp="+new Date().getTime()+"&user="+user;
+            toSign += browse ? "&type=browse":"";
+            var key = CryptoJS.HmacSHA256(password,user)+"";
+            var sign = CryptoJS.HmacSHA256(toSign,key);
+            return toSign+"&signature="+sign;
+        };
+        
+        function check(id){
+            var radio = document.getElementById(id);
+            radio.checked = false;
+            build();
+        }
+        
+        function build(){
+            var user = document.getElementById("user").value;
+            var password = document.getElementById("password").value;
+            var point = document.getElementById("point").value;
+            var link = document.getElementById("link");
+            var read = document.getElementById("read").checked;
+            var browse = document.getElementById("browse").checked;
+            var url;
+            try {
+                url = computeURL(point,browse,user,password);
+            }catch(e){
+                link.href = "#";
+                link.innerHTML = e;
+                return;
+            }
+            link.href = url;
+            link.innerHTML = url;
+        }
+        
+    </script>
+</body>
+</html>
