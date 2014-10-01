@@ -16,7 +16,7 @@ var patternSub = new RegExp("^\\w+(\\.(\\w|\\*)+)*$");
 var verifyURL = function(url){
     var user = url.query.user;
     if(!users[user]){
-        return true;
+        throw "You are not allowed to connect";
     }
     var signature = url.query.signature;
     var check = url.href.split("&signature=")[0];
