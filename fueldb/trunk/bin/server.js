@@ -235,6 +235,10 @@ functions.unsubscribe = function unsubscribe(obj, ws) {
 };
 
 functions.set = function set(obj, ws) {
+    if(ws){
+		ws.onPushed(obj);
+	}
+    delete obj.id;
 	delete obj.type;
 	obj.old = db.read(obj.point);
 	db.write(obj.point, obj.value, obj.user);
