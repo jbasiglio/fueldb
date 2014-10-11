@@ -116,7 +116,7 @@ var FuelDB = function (target) {
 	this.subscribe = function (point, callback, error) {
 		if(!_subPattern.test(point)){
 			if(error && typeof(error) == "function"){
-				error("Point "+point+" is not conform");
+				error({error:"Point "+point+" is not conform"});
 			}else{
 				console.log("Point "+point+" is not conform");
 			}
@@ -148,7 +148,7 @@ var FuelDB = function (target) {
 	this.unsubscribe = function (point, id, error) {
 		if(!_subPattern.test(point)){
 			if(error && typeof(error) == "function"){
-				error("Point "+point+" is not conform");
+				error({error:"Point "+point+" is not conform"});
 			}else{
 				console.log("Point "+point+" is not conform");
 			}
@@ -175,14 +175,23 @@ var FuelDB = function (target) {
 	this.write = function (point, value, error) {
 		if(!_callPattern.test(point)){
 			if(error && typeof(error) == "function"){
-				error("Point "+point+" is not conform");
+				error({error:"Point "+point+" is not conform"});
 			}else{
 				console.log("Point "+point+" is not conform");
 			}
 			return;
 		}
+        var id = uid();
+		var listener = function (e) {
+			delete _events[id];
+			if(e.error && error && typeof(error) == "function"){
+                error(e);
+            }
+		};
+		_events[id] = listener;
 		var obj = {};
 		obj.type = "set";
+        obj.id = id;
 		obj.point = point;
 		obj.value = value;
 		_send(obj);
@@ -202,7 +211,7 @@ var FuelDB = function (target) {
 	this.remove = function (point, error) {
 		if(!_callPattern.test(point)){
 			if(error && typeof(error) == "function"){
-				error("Point "+point+" is not conform");
+				error({error:"Point "+point+" is not conform"});
 			}else{
 				console.log("Point "+point+" is not conform");
 			}
@@ -217,7 +226,7 @@ var FuelDB = function (target) {
 	this.read = function (point, callback, error) {
 		if(!_callPattern.test(point)){
 			if(error && typeof(error) == "function"){
-				error("Point "+point+" is not conform");
+				error({error:"Point "+point+" is not conform"});
 			}else{
 				console.log("Point "+point+" is not conform");
 			}
@@ -248,7 +257,7 @@ var FuelDB = function (target) {
 	this.browse = function (point, callback, error) {
 		if(!(_callPattern.test(point) || point === "")){
 			if(error && typeof(error) == "function"){
-				error("Point "+point+" is not conform");
+				error({error:"Point "+point+" is not conform"});
 			}else{
 				console.log("Point "+point+" is not conform");
 			}
