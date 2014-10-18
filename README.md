@@ -1,11 +1,15 @@
 FuelDB
 ======
 
-A realtime database using websockets
+A realtime database
 
-You can go to this [website](https://wonderfuel.io/fueldb/) to read the full documentation
+You can visit our [website](https://wonderfuel.io/fueldb/) to read the full documentation
 
 ## Usage ##
+
+### Download ###
+
+Check in the release section to download the latest version or find it [here](http://wonderfuel.io/fueldb/download.php).
 
 ### Installing ###
 
@@ -13,7 +17,7 @@ You can go to this [website](https://wonderfuel.io/fueldb/) to read the full doc
 
 ### Configuration ###
 
-To change yout configuration, edit the config/config.json file.
+To change your configuration, edit the config/config.json file.
 
 The defaut user/password is admin/admin, to create a new one use this command:
 
