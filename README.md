@@ -3,7 +3,31 @@ FuelDB
 
 A realtime database using websockets
 
-You can go to this [website](https://wonderfuel.fr/#/fueldb/overview) to read the full documentation and get started to use it
+You can go to this [website](https://wonderfuel.io/fueldb/) to read the full documentation
+
+## Usage ##
+
+### Installing ###
+
+`npm install ws`
+
+### Configuration ###
+
+To change yout configuration, edit the config/config.json file.
+
+The defaut user/password is admin/admin, to create a new one use this command:
+
+`node bin/manage-password {username} {password}`
+
+If the user already exists, it only changes his password. To delete one, simply remove it from config/users.json
+
+### Run ###
+
+`npm start`
+
+### Use ###
+
+Use the [tutorials](http://wonderfuel.io/fueldb/howto.php) to get started
 
 ## Related module ##
 

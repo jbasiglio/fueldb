@@ -31,9 +31,6 @@
   ],
   "id":1,
   "debug":true,
-  "login": true,
-  "inmemory": true,
-  "dbpath": "../root",
   "broker": {
 	  "enable":false,
 	  "host":"localhost",
