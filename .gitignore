@@ -1,3 +1,4 @@
 .project
 nodes_modules
 /node_modules
+/.project
