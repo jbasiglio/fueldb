@@ -15,7 +15,7 @@
     "email": "joris.basiglio@wonderfuel.io",
     "url": "https://wonderfuel.io/"
   },
-  "homepage": "https://www.wonderfuel.io/#/fueldb/overview",
+  "homepage": "https://www.wonderfuel.io/fueldb/",
   "repository": {
     "type": "git",
     "url": "https://github.com/unnamed38/fueldb.git"
