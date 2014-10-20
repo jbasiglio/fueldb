@@ -41,7 +41,7 @@ Use the [tutorials](http://wonderfuel.io/fueldb/howto.php) to get started
 
 (The MIT License)
 
-Copyright (c) 2014 Joris Basiglio &lt;joris.basiglio@gmail.com&gt;
+Copyright (c) 2014 Joris Basiglio &lt;joris.basiglio@wonderfuel.io&gt;
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
