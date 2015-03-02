@@ -4,8 +4,41 @@
  * MIT Licensed
  */
 
+function parseURL(url) {
+    var parser = document.createElement('a'),
+        searchObject = {},
+        queries, split, i;
+    // Let the browser do the work
+    parser.href = url;
+    // Convert query string to object
+    queries = parser.search.replace(/^\?/, '').split('&');
+    for( i = 0; i < queries.length; i++ ) {
+        split = queries[i].split('=');
+        searchObject[split[0]] = split[1];
+    }
+    return {
+        protocol: parser.protocol,
+        ssl: (parser.protocol.indexOf('https') !== -1),
+        host: parser.host,
+        hostname: parser.hostname,
+        port: parser.port,
+        pathname: parser.pathname,
+        search: parser.search,
+        searchObject: searchObject,
+        hash: parser.hash
+    };
+}
 
-var FuelDB = function (target) {
+var scriptSource = parseURL((function(scripts) {
+    var scripts = document.getElementsByTagName('script'),
+        script = scripts[scripts.length - 1];
+    if (script.getAttribute.length !== undefined) {
+        return script.src
+    }
+    return script.getAttribute('src', -1)
+}()));
+
+function FuelDB(target) {
 	'use strict';
 	var _uri;
 	var _ssl;
@@ -48,8 +81,8 @@ var FuelDB = function (target) {
 	};
 	// Exposed function
 	this.connect = function (target) {
-		_uri = (target && target.uri) ? target.uri : "xxxxxxxx:xxxx";
-		_ssl = (target && target.ssl !== undefined) ? target.ssl : "yyyy";
+		_uri = (target && target.uri) ? target.uri : scriptSource.host;
+		_ssl = (target && target.ssl !== undefined) ? target.ssl : scriptSource.ssl;
 		_user = (target && target.user) ? target.user : _user;
 		_password = (target && target.password) ? target.password : _password;
 		_wsUri = "ws"+(_ssl?"s":"")+"://"+_uri;
@@ -60,7 +93,7 @@ var FuelDB = function (target) {
 		_websocket = new WebSocket(_wsUri+_computeURL());
 		_websocket.onopen = function () {
 			console.log("WebSocket opened successfully");
-			if (_onConnect && typeof(_onConnect) == "function") {
+			if (_onConnect && typeof(_onConnect) === "function") {
 				_onConnect();
 			}
 			// Subscribe event initialization
@@ -76,7 +109,7 @@ var FuelDB = function (target) {
 			var point = (obj.point.indexOf(".") === 0 ? obj.point : (obj.id ? obj.id : obj.point));
 			for(var key in _events){
 				if(!point.match(key)){continue;}
-				if (typeof(_events[key]) == "function") {
+				if (typeof(_events[key]) === "function") {
 					_events[key](obj);
 				} else {
 					for (var id in _events[key]) {
@@ -90,7 +123,7 @@ var FuelDB = function (target) {
 		};
 		_websocket.onclose = function (evt) {
 			console.log("WebSocket closed, code: " + evt.code+" reason: "+evt.reason);
-			if (_onDisconnect && typeof(_onDisconnect) == "function") {
+			if (_onDisconnect && typeof(_onDisconnect) === "function") {
 				_onDisconnect();
 			}
 			if(evt.code < 4000){
@@ -107,7 +140,7 @@ var FuelDB = function (target) {
 			_websocket.onclose = function () {}; // disable onclose handler first
 			_websocket.close();
 			console.log("WebSocket closed by client");
-			if (_onDisconnect && typeof(_onDisconnect) == "function") {
+			if (_onDisconnect && typeof(_onDisconnect) === "function") {
 				_onDisconnect();
 			}
 		}
@@ -115,7 +148,7 @@ var FuelDB = function (target) {
 
 	this.subscribe = function (point, callback, error) {
 		if(!_subPattern.test(point)){
-			if(error && typeof(error) == "function"){
+			if(error && typeof(error) === "function"){
 				error({error:"Point "+point+" is not conform"});
 			}else{
 				console.log("Point "+point+" is not conform");
@@ -174,7 +207,7 @@ var FuelDB = function (target) {
 
 	this.write = function (point, value, error) {
 		if(!_callPattern.test(point)){
-			if(error && typeof(error) == "function"){
+			if(error && typeof(error) === "function"){
 				error({error:"Point "+point+" is not conform"});
 			}else{
 				console.log("Point "+point+" is not conform");
@@ -184,7 +217,7 @@ var FuelDB = function (target) {
         var id = uid();
 		var listener = function (e) {
 			delete _events[id];
-			if(e.error && error && typeof(error) == "function"){
+			if(e.error && error && typeof(error) === "function"){
                 error(e);
             }
 		};
@@ -210,7 +243,7 @@ var FuelDB = function (target) {
 
 	this.remove = function (point, error) {
 		if(!_callPattern.test(point)){
-			if(error && typeof(error) == "function"){
+			if(error && typeof(error) === "function"){
 				error({error:"Point "+point+" is not conform"});
 			}else{
 				console.log("Point "+point+" is not conform");
@@ -225,7 +258,7 @@ var FuelDB = function (target) {
 
 	this.read = function (point, callback, error) {
 		if(!_callPattern.test(point)){
-			if(error && typeof(error) == "function"){
+			if(error && typeof(error) === "function"){
 				error({error:"Point "+point+" is not conform"});
 			}else{
 				console.log("Point "+point+" is not conform");
@@ -256,7 +289,7 @@ var FuelDB = function (target) {
 
 	this.browse = function (point, callback, error) {
 		if(!(_callPattern.test(point) || point === "")){
-			if(error && typeof(error) == "function"){
+			if(error && typeof(error) === "function"){
 				error({error:"Point "+point+" is not conform"});
 			}else{
 				console.log("Point "+point+" is not conform");

@@ -48,11 +48,4 @@ exports.update = function(point, value) {
 			}
 		}
 	}
-	/*
-	if (pushables[point]) {
-		for ( var id in pushables[point]) {
-			pushables[point][id].onPushed(value);
-		}
-	}
-	*/
 };

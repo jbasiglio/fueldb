@@ -3,6 +3,10 @@
  * Copyright(c) 2014 Joris Basiglio <joris.basiglio@wonderfuel.io>
  * MIT Licensed
  */
+
+/** 
+ *  Initial import
+ */
 var path = require("path");
 var binDir = path.dirname(require.main.filename)+'/';
 var manager = require(binDir+'./manager.js');
@@ -40,26 +44,28 @@ HTTP_METHOD.GET = "read";
 HTTP_METHOD.PUT = "set";
 HTTP_METHOD.DELETE = "remove";
 HTTP_METHOD.GET_BROWSE = "browse";
+HTTP_METHOD.GET_ARCHIVE = "readArchive";
 
 var _requestHandle = function(request, response, ssl) {
 	var url = request.url.split("?")[0].split("/");
 	if(request.method === "GET" && (url[1] === "api")){
-		try{
-			var api = fs.readFileSync(binDir+".."+url.join("/"),'utf8');
-            if(url.join("/").indexOf(".js") !== -1){
-                api = api.replace("xxxxxxxx:xxxx",request.headers.host);
-                api = api.replace("\"yyyy\"",ssl);
-                response.writeHead(200, {"Content-Type": "text/javascript"});
-            }else{
-                response.writeHead(200, {"Content-Type": "text/html"});
-            }
-			response.write(api);
-		}catch(e){
-			response.writeHead(404);
-		} finally {
-			response.end();
-			return;
-		}
+		var pathName = url.join("/");
+		if(pathName.indexOf(".js") !== -1){
+            response.writeHead(200, {"Content-Type": "text/javascript"});
+        }else{
+            response.writeHead(200, {"Content-Type": "text/html"});
+        }
+		fs.readFile(binDir+".."+pathName,'utf8',function(err,api){
+			try{
+				if(err)throw err;
+				response.write(api);
+			}catch(e){
+				response.writeHead(404);
+			} finally {
+				response.end();
+			}
+		});
+		return;
 	}
 	if(request.method === "OPTIONS"){
 		response.writeHead(200, {"Allow": "HEAD,GET,PUT,DELETE,OPTIONS",
@@ -80,11 +86,14 @@ var _requestHandle = function(request, response, ssl) {
     }
     if(request.method === "GET" && url.query.type === "browse"){
         request.method = "GET_BROWSE";
+    }else if (request.method === "GET" && url.query.type === "archive"){
+    	request.method = "GET_ARCHIVE";
     }
 	var path = url.pathname.split("/");
 	path = path.slice(1,path.length).join(".");
-	var obj ={point:path};
+	var obj = {point:path};
     obj.user = url.query.user;
+    obj.date = url.query.date;
 	var body = "";
 	request.on('data', function (data) {
         body += data;
@@ -103,11 +112,13 @@ var _requestHandle = function(request, response, ssl) {
 		if(wscBroker && clustFct.indexOf(HTTP_METHOD[request.method]) !== -1){
 			wscBroker.dispatch(JSON.stringify(obj));
 		}
-		obj = functions[HTTP_METHOD[request.method]](obj);
-		if(obj){
-			response.write(JSON.stringify(obj));
+		response.onPushed = function(obj){
+			if(obj){
+				response.write(JSON.stringify(obj));
+			}
+			response.end();
 		}
-		response.end();
+		functions[HTTP_METHOD[request.method]](obj,response);
 	});
 };
 
@@ -216,7 +227,7 @@ var _updatePoint = function(point, value){
 	obj.point = point;
 	obj.value = value;
     obj.user = "system";
-	functions.set(obj,null);
+	functions.set(obj);
 };
 
 functions.subscribe = function subscribe(obj, ws) {
@@ -259,7 +270,20 @@ functions.read = function read(obj, ws) {
 	}
 };
 
+functions.readArchive = function readArchive(obj, ws) {
+    delete obj.user;
+    db.readArchive(obj.point,new Date(obj.date),function(value, user, date){
+    	obj.value = value;
+    	obj.user = user;
+    	obj.date = date;
+    	if(ws){
+    		ws.onPushed(obj);
+    	}
+    })
+};
+
 functions.browse = function browse(obj, ws) {
+	delete obj.user;
 	obj.value = db.browse(obj.point);
 	if(ws){
 		ws.onPushed(obj);
@@ -277,8 +301,8 @@ serverType.ws = function(host){
     var httpServer;
 	if (host.ssl) {
 		var options = {
-			key : fs.readFileSync(binDir+host.key),
-			cert : fs.readFileSync(binDir+host.cert)
+			key : fs.readFileSync(host.key),
+			cert : fs.readFileSync(host.cert)
 		};
 		httpServer = https.createServer(options,_httpsRequestHandle);
 	}else{
@@ -298,15 +322,15 @@ serverType.socket = function(host){
     var server;
     if (host.ssl) {
 		var options = {
-			key : fs.readFileSync(binDir+host.key),
-			cert : fs.readFileSync(binDir+host.cert)
+			key : fs.readFileSync(host.key),
+			cert : fs.readFileSync(host.cert)
 		};
 		server = tls.createServer(options,_socketRequestHandle);
 	}else{
 		server = net.createServer(_socketRequestHandle);
 	}
     server.on('error', function (e) {
-      if (e.code == 'EADDRINUSE') {
+      if (e.code === 'EADDRINUSE') {
         console.log('Address in use, retrying...');
         setTimeout(function () {
           server.close();
@@ -315,7 +339,7 @@ serverType.socket = function(host){
       }
     });
     server.listen(host.port, host.host, function() { //'listening' listener
-        console.log('Listening for Socket'+(host.ssl?' over SSL':'')
+        console.log('Listening to socket'+(host.ssl?' over SSL':'')
         +' at IP ' + host.host + ' on port ' + host.port);
     });
 };
@@ -344,7 +368,7 @@ var _connectBroker = function(){
 		}
 		obj.point = obj.point ? obj.point.trim() : "";
 		if (obj.type in functions && typeof functions[obj.type] === "function") {
-			functions[obj.type](obj, null);
+			functions[obj.type](obj);
 		}
 	});
 	wscBroker.on('close', function(evt){

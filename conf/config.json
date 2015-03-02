@@ -44,5 +44,13 @@
 	  "port":8303,
 	  "user":"admin",
 	  "password":"admin"
+  },
+  "database":{
+	  "enable":true,
+	  "host":"localhost",
+	  "port":27017,
+	  "db":"admin",
+	  "user":"admin",
+	  "password":"admin"
   }
 }

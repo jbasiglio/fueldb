@@ -29,7 +29,8 @@
   },
 
   "dependencies": {
-    "ws": "*"
+    "ws": "*",
+    "mongodb": "*"
   },
   "devDependencies": {},
   "bundleDependencies": [],

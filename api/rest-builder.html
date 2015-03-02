@@ -13,15 +13,18 @@
         <input id="password" placeholder="Password" type="password" onkeyup="build()"/>
         <br/>
         Point: <input id="point" placeholder="point" type="text" onkeyup="build()"/>
-        <input id="read" type="radio" onclick="check('browse')" checked/>Read
-        <input id="browse" type="radio" onclick="check('read')" />Browse
+        <input id="read" type="radio" onclick="check(['browse','archive'])" checked/>Read
+        <input id="browse" type="radio" onclick="check(['read','archive'])" />Browse
+		<input id="archive" type="radio" onclick="check(['read','browse'])" />Archive
+		<br/>
+		Date: <input id="date" placeholder="Unix epoch" type="number" onkeyup="build()"/>
         <br/>
         <a id="link" href="#" target="_blank">Fill the fields</a>
     </div>
     <script type="text/javascript" src="/api/fueldb.js"></script>
     <script type="text/javascript">
         var pattern = new RegExp("^\\w+(\\.\\w+)*$");
-        function computeURL(point,browse,user,password){
+        function computeURL(point,browse,archive,date,user,password){
             if(!browse && (!point || point == "")){
                 throw "Point can't be empty for a read request";
             }
@@ -33,14 +36,20 @@
             }
             var toSign = "/"+(point ? point.split(".").join("/"):"")+"?timestamp="+new Date().getTime()+"&user="+user;
             toSign += browse ? "&type=browse":"";
+			if(archive){
+				toSign += "&type=archive";
+				toSign += "&date="+date;
+			}
             var key = CryptoJS.HmacSHA256(password,user)+"";
             var sign = CryptoJS.HmacSHA256(toSign,key);
             return toSign+"&signature="+sign;
         };
         
-        function check(id){
-            var radio = document.getElementById(id);
-            radio.checked = false;
+        function check(ids){
+			ids.forEach(function(id){
+				var radio = document.getElementById(id);
+            	radio.checked = false;
+			});
             build();
         }
         
@@ -51,9 +60,11 @@
             var link = document.getElementById("link");
             var read = document.getElementById("read").checked;
             var browse = document.getElementById("browse").checked;
+			var archive = document.getElementById("archive").checked;
+			var date =  document.getElementById("date").value
             var url;
             try {
-                url = computeURL(point,browse,user,password);
+                url = computeURL(point,browse,archive,date,user,password);
             }catch(e){
                 link.href = "#";
                 link.innerHTML = e;
@@ -62,7 +73,6 @@
             link.href = url;
             link.innerHTML = url;
         }
-        
     </script>
 </body>
 </html>
