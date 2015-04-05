@@ -200,7 +200,6 @@ var _socketRequestHandle = function(socket) {
         	try{
         	    obj = JSON.parse(msg);
         	}catch(ex){
-        		console.log(ex);
         	    obj = {point:".ERROR",value:"Message format is not correct"};
         	    socket.onPushed(obj);
         	    return;
