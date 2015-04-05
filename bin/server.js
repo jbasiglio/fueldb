@@ -190,26 +190,33 @@ var _socketRequestHandle = function(socket) {
         socket.write(JSON.stringify(msg)+'\3'); //End Of Text (EOT)
     };
 	socket.on('data', function(message) {
-        _updateIOPS();
-        var obj;
-        try{
-            obj = JSON.parse(message);
-        }catch(ex){
-            obj = {point:".ERROR",value:"Message format is not correct"};
-            socket.onPushed(obj);
-            return;
-        }
-		obj.point = obj.point ? obj.point.trim() : "";
-		if (auth.verifyWS(obj)) {
-			socket.onPushed(obj);
-			return;
-		}
-		if (obj.type in functions && typeof functions[obj.type] === "function") {
-			if(wscBroker && clustFct.indexOf(obj.type) !== -1){
-				wscBroker.dispatch(message);
+		var messages = message.toString('utf8');
+		messages.split('\3').forEach(function(msg){
+			if(msg == null || msg == ""){
+				return;
 			}
-			functions[obj.type](obj, socket);
-		}
+			_updateIOPS();
+        	var obj;
+        	try{
+        	    obj = JSON.parse(msg);
+        	}catch(ex){
+        		console.log(ex);
+        	    obj = {point:".ERROR",value:"Message format is not correct"};
+        	    socket.onPushed(obj);
+        	    return;
+        	}
+			obj.point = obj.point ? obj.point.trim() : "";
+			if (auth.verifyWS(obj)) {
+				socket.onPushed(obj);
+				return;
+			}
+			if (obj.type in functions && typeof functions[obj.type] === "function") {
+				if(wscBroker && clustFct.indexOf(obj.type) !== -1){
+					wscBroker.dispatch(message);
+				}
+				functions[obj.type](obj, socket);
+			}
+		})
 	});
 	socket.on('error', function(message) {
 		console.log("Error: "+message);
