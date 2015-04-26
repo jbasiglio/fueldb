@@ -17,16 +17,16 @@
 	  "ssl":true,
 	  "host":"0.0.0.0",
 	  "port": 8104,
-	  "key":"conf/key.pem",
-	  "cert":"conf/key-cert.pem"
+	  "key":"../conf/key.pem",
+	  "cert":"../conf/key-cert.pem"
 	},
 	{
       "type":"ws",
 	  "ssl":true,
 	  "host":"0.0.0.0",
 	  "port": 8102,
-	  "key":"conf/key.pem",
-	  "cert":"conf/key-cert.pem"
+	  "key":"../conf/key.pem",
+	  "cert":"../conf/key-cert.pem"
 	}
   ],
   "id":1,

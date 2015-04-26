@@ -54,7 +54,7 @@ function FuelDB(target) {
 	var _onDisconnect;
 	var _callPattern = new RegExp("^\\w+(\\.\\w+)*$");
 	var _subPattern = new RegExp("^\\w+(\\.(\\w|\\*)+)*$");
-	
+	var _buffer = [];
 	var _init = function () {
 		_events[".ERROR"] = function (e) {
 			console.log("[Error] " + e.value);
@@ -75,8 +75,9 @@ function FuelDB(target) {
 				_send(obj);
 			}, 200);
 		} else {
-			console.log("[Warning] Packet throwed away");
+			console.log("[Warning] Packet buffered");
 			console.log(obj);
+			_buffer.push(obj);
 		}
 	};
 	// Exposed function
@@ -102,6 +103,11 @@ function FuelDB(target) {
 					delete _events[point][uid];
 					_subscribe(point, _subscribeEvent[point][uid].cb, uid);
 				}
+			}
+			var element = _buffer.shift();
+			while(element){
+				_send(element);
+				element = _buffer.shift();
 			}
 		};
 		_websocket.onmessage = function (evt) {
