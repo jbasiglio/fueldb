@@ -8,13 +8,13 @@
  *  Initial import
  */
 var path = require("path");
-var binDir = path.dirname(require.main.filename)+'/';
-var manager = require(binDir+'./manager.js');
-var uid = require(binDir+'./uid.js');
-var config = require(binDir+'../conf/config.json');
-var package = require(binDir+'../package.json');
-var auth = require(binDir+'./auth.js');
-var db = require(binDir+'./memdb.js');
+process.chdir(path.dirname(require.main.filename)+'/..');
+var manager = require('./manager.js');
+var uid = require('./uid.js');
+var config = require('../conf/config.json');
+var package = require('../package.json');
+var auth = require('./auth.js');
+var db = require('./memdb.js');
 var WebSocket = require('ws');
 var net = require('net');
 var tls = require('tls')
@@ -55,7 +55,7 @@ var _requestHandle = function(request, response, ssl) {
         }else{
             response.writeHead(200, {"Content-Type": "text/html"});
         }
-		fs.readFile(binDir+".."+pathName,'utf8',function(err,api){
+		fs.readFile('.'+pathName,'utf8',function(err,api){
 			try{
 				if(err)throw err;
 				response.write(api);

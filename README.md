@@ -1,7 +1,7 @@
 FuelDB
 ======
 
-A realtime database
+FuelDB is a realtime database written in javascript using NodeJS platform.
 
 You can visit our [website](https://wonderfuel.io/fueldb/) to read the full documentation
 
@@ -9,11 +9,11 @@ You can visit our [website](https://wonderfuel.io/fueldb/) to read the full docu
 
 ### Download ###
 
-Check in the release section to download the latest version or find it [here](http://wonderfuel.io/fueldb/download.php).
+Check the release section to download the latest version or find it [here](http://wonderfuel.io/fueldb/download.php).
 
 ### Installing ###
 
-`npm install ws`
+`npm install`
 
 ### Configuration ###
 

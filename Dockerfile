@@ -15,4 +15,4 @@ EXPOSE  8102
 EXPOSE  8103
 EXPOSE  8104
 
-CMD ["node", "/opt/fueldb/bin/server.js"]
+CMD ["npm", "start"]
