@@ -3,10 +3,8 @@
  * Copyright(c) 2014 Joris Basiglio <joris.basiglio@wonderfuel.io>
  * MIT Licensed
  */
-var path = require("path");
-var binDir = path.dirname(require.main.filename)+'/';
-var config = require(binDir+'../conf/config.json');
-var users = require(binDir+'../conf/users.json');
+var config = require('../conf/config.json');
+var users = require('../conf/users.json');
 var crypto = require('crypto');
 
 

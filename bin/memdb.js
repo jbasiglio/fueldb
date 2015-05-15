@@ -3,10 +3,8 @@
  * Copyright(c) 2014 Joris Basiglio <joris.basiglio@wonderfuel.io>
  * MIT Licensed
  */
-var path = require("path");
-var binDir = path.dirname(require.main.filename) + '/';
-var archive = require(binDir+'./archive.js');
-var archivePoints = require(binDir+'../conf/archive.json');
+var archive = require('./archive.js');
+var archivePoints = require('../conf/archive.json');
 var db = {};
 var reservedPoint = [".VALUE",".DATE",".USER"];
 

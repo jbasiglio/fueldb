@@ -33,9 +33,9 @@ var scriptSource = parseURL((function(scripts) {
     var scripts = document.getElementsByTagName('script'),
         script = scripts[scripts.length - 1];
     if (script.getAttribute.length !== undefined) {
-        return script.src
+        return script.src;
     }
-    return script.getAttribute('src', -1)
+    return script.getAttribute('src', -1);
 }()));
 
 function FuelDB(target) {
@@ -92,6 +92,7 @@ function FuelDB(target) {
 		_onDisconnect = (target && target.onDisconnected) ? target.onDisconnected : _onDisconnect;
 
 		_websocket = new WebSocket(_wsUri+_computeURL());
+		
 		_websocket.onopen = function () {
 			console.log("WebSocket opened successfully");
 			if (_onConnect && typeof(_onConnect) === "function") {
@@ -101,7 +102,7 @@ function FuelDB(target) {
 			for (var point in _subscribeEvent) {
 				for (var uid in _subscribeEvent[point]) {
 					delete _events[point][uid];
-					_subscribe(point, _subscribeEvent[point][uid].cb, uid);
+					_subscribe(point, _subscribeEvent[point][uid].cb, null, uid);
 				}
 			}
 			var element = _buffer.shift();
@@ -152,7 +153,7 @@ function FuelDB(target) {
 		}
 	};
 
-	this.subscribe = function (point, callback, error) {
+	var _subscribe = function (point, callback, error, _uid) {
 		if(!_subPattern.test(point)){
 			if(error && typeof(error) === "function"){
 				error({error:"Point "+point+" is not conform"});
@@ -164,7 +165,7 @@ function FuelDB(target) {
 		var listener = function (e) {
 			callback(e);
 		};
-		var uuid = uid();
+		var uuid = _uid ? _uid : uid();
 		if (_subscribeEvent[point] === undefined) {
 			_subscribeEvent[point] = {};
 		}
@@ -182,7 +183,9 @@ function FuelDB(target) {
 		_send(obj);
 		return uuid;
 	};
-	var _subscribe = this.subscribe;
+	this.subscribe = function(point, callback, error){
+		_subscribe(point, callback, error);
+	}
 
 	this.unsubscribe = function (point, id, error) {
 		if(!_subPattern.test(point)){
@@ -344,7 +347,7 @@ function FuelDB(target) {
 
 	_init();
 	_connect(target);
-};
+}
 
 
 /*

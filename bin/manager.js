@@ -6,6 +6,10 @@
 
 var pushables = {};
 
+function clone(a) {
+	return JSON.parse(JSON.stringify(a));
+}
+
 exports.add = function(point, ws) {
 	if (!pushables[point]) {
 		pushables[point] = {};
@@ -43,7 +47,12 @@ exports.update = function(point, value) {
 		if(!match||(match.length !== 1)||match[0] !== point){continue;}
 		for ( var id in pushables[key]) {
 			if(already.indexOf(id)===-1){
-				pushables[key][id].onPushed(value);
+				var obj = clone(value);
+				if(pushables[key][id].id == obj.wsId){
+					obj.local = true;
+				}
+				delete obj.wsId;
+				pushables[key][id].onPushed(obj);
 				already.push(id);
 			}
 		}

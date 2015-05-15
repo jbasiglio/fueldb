@@ -254,6 +254,7 @@ functions.unsubscribe = function unsubscribe(obj, ws) {
 functions.set = function set(obj, ws) {
     if(ws){
 		ws.onPushed(obj);
+		obj.wsId = ws.id;
 	}
     delete obj.id;
 	delete obj.type;

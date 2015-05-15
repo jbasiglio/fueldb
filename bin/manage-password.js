@@ -4,11 +4,9 @@
  * MIT Licensed
  */
 
-var path = require("path");
-var binDir = path.dirname(require.main.filename)+'/';
 var fs = require('fs');
 var crypto = require('crypto');
-var users = require(binDir+'../conf/users.json');
+var users = require('../conf/users.json');
 if(!(process.argv[2] && process.argv[3])){
 	console.log("Usage: 'node manage-password {username} {password}'");
 	return;

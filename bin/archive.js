@@ -1,9 +1,7 @@
 /**
  * New node file
  */
-var path = require("path");
-var binDir = path.dirname(require.main.filename) + '/';
-var config = require(binDir + '../conf/config.json').database;
+var config = require('../conf/config.json').database;
 if(!config.enable){
 	exports.init = function(){};
 	exports.insert = function(){};
