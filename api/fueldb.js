@@ -184,7 +184,7 @@ function FuelDB(target) {
 		return uuid;
 	};
 	this.subscribe = function(point, callback, error){
-		_subscribe(point, callback, error);
+		return _subscribe(point, callback, error);
 	}
 
 	this.unsubscribe = function (point, id, error) {
