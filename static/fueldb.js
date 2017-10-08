@@ -43,7 +43,7 @@ function FuelDB(target) {
 	var _uri;
 	var _ssl;
 	var _wsUri;
-	var _httpUri;
+	// var _httpUri;
 	var _user;
 	var _password;
 	var _noTimeoutCmd = ["subscribe"];
@@ -70,10 +70,10 @@ function FuelDB(target) {
 	var _send = function (obj) {
 		if (_websocket.readyState === WebSocket.OPEN) {
 			_websocket.send(JSON.stringify(obj));
-		} else if (_websocket.readyState === WebSocket.CONNECTING && _noTimeoutCmd.indexOf(obj.type) === -1) {
-			setTimeout(function () {
-				_send(obj);
-			}, 200);
+		// } else if (_websocket.readyState === WebSocket.CONNECTING && _noTimeoutCmd.indexOf(obj.type) === -1) {
+		// 	setTimeout(function () {
+		// 		_send(obj);
+		// 	}, 200);
 		} else {
 			console.log("[Warning] Packet buffered");
 			console.log(obj);
@@ -86,8 +86,8 @@ function FuelDB(target) {
 		_ssl = (target && target.ssl !== undefined) ? target.ssl : scriptSource.ssl;
 		_user = (target && target.user) ? target.user : _user;
 		_password = (target && target.password) ? target.password : _password;
-		_wsUri = "ws"+(_ssl?"s":"")+"://"+_uri;
-		_httpUri = "http"+(_ssl?"s":"")+"://"+_uri;
+		_wsUri = "ws"+(_ssl?"s":"")+"://"+_user+":"+_password+"@"+_uri;
+		// _httpUri = "http"+(_ssl?"s":"")+"://"+_uri;
 		_onConnect = (target && target.onConnected) ? target.onConnected : _onConnect;
 		_onDisconnect = (target && target.onDisconnected) ? target.onDisconnected : _onDisconnect;
 
@@ -334,7 +334,7 @@ function FuelDB(target) {
 	};
 
 	var _computeURL = function(point){
-		var toSign = "/"+(point ? point.split(".").join("/"):"")+"?timestamp="+new Date().getTime()+"&user="+_user;
+		var toSign = "/ws/"+(point ? point.split(".").join("/"):"")+"?timestamp="+new Date().getTime()+"&user="+_user;
 		var key = CryptoJS.HmacSHA256(_password,_user)+"";
 		var sign = CryptoJS.HmacSHA256(toSign,key);
 		return toSign+"&signature="+sign;

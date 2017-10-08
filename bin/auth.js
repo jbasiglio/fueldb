@@ -12,6 +12,8 @@ var pattern = new RegExp("^\\w+(\\.\\w+)*$");
 var patternSub = new RegExp("^\\w+(\\.(\\w|\\*)+)*$");
 
 var verifyURL = function(url){
+    // throw "You are not allowed to connect";
+    // return;
     var user = url.query.user;
     if(!users[user]){
         throw "You are not allowed to connect";

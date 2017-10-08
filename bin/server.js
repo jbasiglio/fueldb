@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 /**
  * fueldb: a realtime database
  * Copyright(c) 2014 Joris Basiglio <joris.basiglio@wonderfuel.io>
@@ -15,6 +17,7 @@ var config = require('../conf/config.json');
 var package = require('../package.json');
 var auth = require('./auth.js');
 var db = require('./memdb.js');
+var bodyParser = require('body-parser')
 var WebSocket = require('ws');
 var net = require('net');
 var tls = require('tls')
@@ -25,6 +28,8 @@ var urlParse = require('url');
 var qs = require('querystring');
 var http = require('http');
 var https = require('https');
+var cors = require('cors');
+var express = require('express');
 
 var functions = {};
 var serverType = {};
@@ -46,44 +51,28 @@ HTTP_METHOD.DELETE = "remove";
 HTTP_METHOD.GET_BROWSE = "browse";
 HTTP_METHOD.GET_ARCHIVE = "readArchive";
 
-var _requestHandle = function(request, response, ssl) {
-	var url = request.url.split("?")[0].split("/");
-	if(request.method === "GET" && (url[1] === "api")){
-		var pathName = url.join("/");
-		if(pathName.indexOf(".js") !== -1){
-            response.writeHead(200, {"Content-Type": "text/javascript"});
-        }else{
-            response.writeHead(200, {"Content-Type": "text/html"});
-        }
-		fs.readFile('.'+pathName,'utf8',function(err,api){
-			try{
-				if(err)throw err;
-				response.write(api);
-			}catch(e){
-				response.writeHead(404);
-			} finally {
-				response.end();
-			}
-		});
-		return;
-	}
-	if(request.method === "OPTIONS"){
-		response.writeHead(200, {"Allow": "HEAD,GET,PUT,DELETE,OPTIONS",
-			"Access-Control-Allow-Origin" : "*",
-			"Access-Control-Allow-Methods" : "GET,PUT,POST,DELETE",
-			"Access-Control-Allow-Headers" : "Content-Type"});
-		response.end();
-		return;
-	}
-	url = urlParse.parse(request.url,true);
+const app = express();
+var expressWs = require('express-ws')(app);
+
+app.use(cors());
+app.use('/static', express.static('static'))
+
+app.use(bodyParser.json());
+app.use('/rest',function(request,response,next){
+	console.log(request.url);
+	var url = urlParse.parse(request.url,true);
     try{
         auth.verifyHTTP(url,request.method);
     }catch(e){
         response.writeHead(403, {"Content-Type": "application/json"});
-		response.write(JSON.stringify({"error": e}));
+		response.json({"error": e});
 		response.end();
 		return;
-    }
+	}
+	next();
+});
+
+app.use('/rest',function(request, response) {
     if(request.method === "GET" && url.query.type === "browse"){
         request.method = "GET_BROWSE";
     }else if (request.method === "GET" && url.query.type === "archive"){
@@ -93,53 +82,56 @@ var _requestHandle = function(request, response, ssl) {
 	path = path.slice(1,path.length).join(".");
 	var obj = {point:path};
     obj.user = url.query.user;
-    obj.date = url.query.date;
-	var body = "";
-	request.on('data', function (data) {
-        body += data;
-        if (body.length > 1e6) {
-			response.writeHead(413,{'Content-Type' : 'text/plain'}).end();
-			request.connection.destroy();
+	obj.date = url.query.date;
+	obj.value = req.body.value;
+	response.onPushed = function(obj){
+		response.writeHead(200,{});
+		if(obj){
+			response.write(JSON.stringify(obj));
 		}
-    });
-    request.on('end', function () {
-		body = qs.parse(body);
-		response.writeHead(200, {"Content-Type": "application/json",
-			"Access-Control-Allow-Origin" : "*",
-			"Access-Control-Allow-Methods" : "GET,PUT,POST,DELETE",
-			"Access-Control-Allow-Headers" : "Content-Type"});
-		obj.value = body.value;
-		if(wscBroker && clustFct.indexOf(HTTP_METHOD[request.method]) !== -1){
-			wscBroker.dispatch(JSON.stringify(obj));
-		}
-		response.onPushed = function(obj){
-			if(obj){
-				response.write(JSON.stringify(obj));
-			}
-			response.end();
-		}
-		functions[HTTP_METHOD[request.method]](obj,response);
-	});
-};
+		response.end();
+	}
+	functions[HTTP_METHOD[request.method]](obj,response);
+	
+	// var body = "";
+	// request.on('data', function (data) {
+    //     body += data;
+    //     if (body.length > 1e6) {
+	// 		response.writeHead(413,{'Content-Type' : 'text/plain'}).end();
+	// 		request.connection.destroy();
+	// 	}
+    // });
+    // request.on('end', function () {
+	// 	body = qs.parse(body);
+	// 	response.writeHead(200,{});
+	// 	obj.value = body.value;
+	// 	// if(wscBroker && clustFct.indexOf(HTTP_METHOD[request.method]) !== -1){
+	// 	// 	wscBroker.dispatch(JSON.stringify(obj));
+	// 	// }
+	// 	response.onPushed = function(obj){
+	// 		if(obj){
+	// 			response.write(JSON.stringify(obj));
+	// 		}
+	// 		response.end();
+	// 	}
+	// 	functions[HTTP_METHOD[request.method]](obj,response);
+	// });
+});
 
-var _httpsRequestHandle = function(request, response) {
-	_requestHandle(request, response, "true");
-};
-
-var _httpRequestHandle = function(request, response) {
-	_requestHandle(request, response, "false");
-};
-
-var _wsRequestHandle = function(ws) {
-	var url = urlParse.parse(ws.upgradeReq.url,true);
+app.ws("/ws",function(ws, req, next) {
+	var url = urlParse.parse(req.url,true);
     try{
         auth.verifyWSURL(url)
     }catch(e){
-        setTimeout(function(){
-			ws.close(4403,e+"");
-		},200);
+		ws.close(4403,e+"");
 		return;    
-    }
+	}
+	next();
+});
+
+app.ws("/ws",function(ws, req) {
+	var url = urlParse.parse(req.url,true);
+	console.log(req.headers);
 	ws.id = uid.gen();
     ws.user = url.query.user;
 	console.log("Connection open: "+ws.id);
@@ -165,9 +157,9 @@ var _wsRequestHandle = function(ws) {
 		}
 		
 		if (obj.type in functions && typeof functions[obj.type] === "function") {
-			if(wscBroker && clustFct.indexOf(obj.type) !== -1){
-				wscBroker.dispatch(message);
-			}
+			// if(wscBroker && clustFct.indexOf(obj.type) !== -1){
+			// 	wscBroker.dispatch(message);
+			// }
 			functions[obj.type](obj, ws);
 		}
 	});
@@ -179,7 +171,7 @@ var _wsRequestHandle = function(ws) {
 		_updateConnection(false);
 		manager.removeAll(ws.id);
 	});
-};
+});
 
 var _socketRequestHandle = function(socket) {
 	socket.id = uid.gen();
@@ -210,9 +202,9 @@ var _socketRequestHandle = function(socket) {
 				return;
 			}
 			if (obj.type in functions && typeof functions[obj.type] === "function") {
-				if(wscBroker && clustFct.indexOf(obj.type) !== -1){
-					wscBroker.dispatch(message);
-				}
+				// if(wscBroker && clustFct.indexOf(obj.type) !== -1){
+				// 	wscBroker.dispatch(message);
+				// }
 				functions[obj.type](obj, socket);
 			}
 		})
@@ -252,15 +244,16 @@ functions.unsubscribe = function unsubscribe(obj, ws) {
 };
 
 functions.set = function set(obj, ws) {
-    if(ws){
+	obj.old = db.read(obj.point);
+	var now = new Date();
+	db.write(obj.point, obj.value, obj.user, now);
+	if(ws){
 		ws.onPushed(obj);
 		obj.wsId = ws.id;
 	}
     delete obj.id;
 	delete obj.type;
-	obj.old = db.read(obj.point);
-	db.write(obj.point, obj.value, obj.user);
-	obj.date = new Date().toISOString();
+	obj.date = now.toISOString();
 	manager.update(obj.point, obj);
 };
 
@@ -305,21 +298,24 @@ functions.remove = function remove(obj, ws) {
 };
 
 serverType.ws = function(host){
-    var httpServer;
+	/*
+    var webServer;
 	if (host.ssl) {
 		var options = {
 			key : fs.readFileSync(host.key),
 			cert : fs.readFileSync(host.cert)
 		};
-		httpServer = https.createServer(options,_httpsRequestHandle);
+		webServer = https.createServer(options,app);
 	}else{
-		httpServer = http.createServer(_httpRequestHandle);
+		webServer = http.createServer(app);
 	}
 	var wsServer = new WebSocketServer({
-		server : httpServer
+		server : webServer
 	});
 	wsServer.on('connection', _wsRequestHandle);
-	httpServer.listen(host.port, host.host);
+	webServer.listen(host.port, host.host);
+	*/
+	app.listen(host.port);
 	console.log('Listening for HTTP'+(host.ssl?'S':'')+'/WS'
         +(host.ssl?'S':'')+' at IP ' + host.host + ' on port ' + host.port);
 };
@@ -356,57 +352,6 @@ config.hosts.forEach(function(host){
         serverType[host.type](host);
     }
 });
-
-//****** Clustering ******//
-
-var wscBroker;
-var _connectBroker = function(){
-	wscBroker = new WebSocket('ws://'+config.broker.host+':'+config.broker.port
-        +auth.computeBrokerURL());
-	wscBroker.on('open', function() {
-		console.log("connected to broker");
-	});
-	wscBroker.on('message', function(data, flags) {
-		console.log("From broker: "+data);
-		var obj = JSON.parse(data);
-		if(obj.error){
-			console.log(obj.error);
-			return;
-		}
-		obj.point = obj.point ? obj.point.trim() : "";
-		if (obj.type in functions && typeof functions[obj.type] === "function") {
-			functions[obj.type](obj);
-		}
-	});
-	wscBroker.on('close', function(evt){
-		console.log("connection to broker aborted: "+evt);
-	});
-	wscBroker.dispatch = function(msg){
-		wscBroker.send(msg);
-	};
-};
-
-if(config.broker.enable){
-	_connectBroker();
-}
-var wscBalancer;
-var _connectBalancer = function(){
-	wscBalancer = new WebSocket('ws://' + config.balancer.host + ':' 
-        + config.balancer.port + auth.computeBalancerURL());
-	wscBalancer.on('open', function() {
-		console.log("connected to balancer");
-	});
-	wscBalancer.on('message', function(data, flags) {
-		console.log("From balancer: " + data);
-	});
-	wscBalancer.on('close', function(evt) {
-		console.log("connection to balancer aborted: " + evt);
-	});
-};
-if(config.balancer.enable){
-	_connectBalancer();
-}
-//****** End Clustering ******//
 
 //****** Performance ******//
 

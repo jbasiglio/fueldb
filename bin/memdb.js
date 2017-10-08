@@ -5,8 +5,14 @@
  */
 var archive = require('./archive.js');
 var archivePoints = require('../conf/archive.json');
+var KEY = require('./keys.json');
+var groups = require('../conf/groups.json');
 var db = {};
-var reservedPoint = [".VALUE",".DATE",".USER"];
+var reservedPoint = [];
+for(var i in KEY){
+	reservedPoint.push("."+KEY[i]);
+}
+//var reservedPoint = [".VALUE",".DATE",".USER"];
 
 archive.init(function(){
 	archivePoints.forEach(function(point){
@@ -18,27 +24,22 @@ archive.init(function(){
 	});
 });
 
-function format(point){
-	return {
-		value:(point && point[".VALUE"]) ? point[".VALUE"] : "",
-		user:(point && point[".USER"]) ? point[".USER"] : "",
-		date:(point && point[".DATE"]) ? point[".DATE"] : ""
-	};
+function getGroupsFromUser(user){
+	var values = [];
+	for(var group in groups){
+		if(groups[groups].indexOf(user)>=0){
+			values.push(group);
+		}
+	}
+	return values;
 }
 
-function getPoint(path){
-	var points = path.split(".");
-	if(db[points[0]] === undefined){
-		db[points[0]] = {};
-	}
-	var point = db[points[0]];
-	for(var i=1; i<points.length; i++){
-		if(point[points[i]] === undefined){
-			point[points[i]] = {};
-		}
-		point = point[points[i]];
-	}
-	return point;
+function format(point){
+	return {
+		"value":(point && point["."+KEY.VALUE]) ? point["."+KEY.VALUE] : "",
+		"user":(point && point["."+KEY.MODIF_USER]) ? point["."+KEY.MODIF_USER] : "",
+		"date":(point && point["."+KEY.MODIF_DATE]) ? point["."+KEY.MODIF_DATE] : ""
+	};
 }
 
 exports.read = function(path,cb){
@@ -69,19 +70,42 @@ exports.remove = function(path){
 	}
 };
 
+function getPoint(path){
+	var newPoint = false;
+	var points = path.split(".");
+	if(db[points[0]] === undefined){
+		db[points[0]] = {};
+		newPoint = true;
+	}
+	var point = db[points[0]];
+	for(var i=1; i<points.length; i++){
+		if(point[points[i]] === undefined){
+			point[points[i]] = {};
+			newPoint = true;
+		}
+		point = point[points[i]];
+	}
+	return [point, newPoint];
+}
+
 var writeNoArch = function(path, value, user, now){
-	var point = getPoint(path);
-	point[".VALUE"] = value;
-	point[".USER"] = user;
-	point[".DATE"] = now.toISOString();
+	var retVal = getPoint(path);
+	var point = retVal[0];
+	var newPoint = retVal[1];
+	point["."+KEY.VALUE] = value;
+	point["."+KEY.MODIF_USER] = user;
+	point["."+KEY.MODIF_DATE] = now.toISOString();
+	if(newPoint){
+		point["."+KEY.CREATE_USER] = user;
+		point["."+KEY.CREATE_DATE] = now.toISOString();
+	}
 };
 
-exports.write = function(path, value, user){
-	var point = getPoint(path);
-	var now = new Date();
-	point[".VALUE"] = value;
-	point[".USER"] = user;
-	point[".DATE"] = now.toISOString();
+exports.write = function(path, value, user, now){
+	if(!now){
+		now = new Date();
+	}
+	writeNoArch(path, value, user, now);
     if(archivePoints.indexOf(path) !== -1){
 	    archive.insert(path,value,user,now);
     }
@@ -89,7 +113,7 @@ exports.write = function(path, value, user){
 
 exports.browse = function(path,cb){
 	var points = path.split(".");
-	var point = points[0]==="" ? db : db[points[0]];
+	var point = points[0]=== "" ? db : db[points[0]];
 	for(var i=1; i<points.length && point; i++){
 		point = point[points[i]];
 	}

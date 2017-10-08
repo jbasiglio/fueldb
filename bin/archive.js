@@ -2,6 +2,8 @@
  * New node file
  */
 var config = require('../conf/config.json').database;
+var KEY = require('./keys.json');
+
 if(!config.enable){
 	exports.init = function(){};
 	exports.insert = function(){};
@@ -48,11 +50,11 @@ function merge(path,value) {
 
 var insert = function(path,value,user,date){
 	if(collection){
-		collection.insert(merge(path,{
-			"@VALUE":value,
-			"@USER":user,
-			"@DATE":date
-		}),function(err, docs){
+		var data = {};
+		data["@"+KEY.VALUE] = value;
+		data["@"+KEY.MODIF_USER] = user;
+		data["@"+KEY.MODIF_DATE] = date;
+		collection.insert(merge(path,data),function(err, docs){
 			
 		});
 		return true;
@@ -64,7 +66,7 @@ exports.insert = insert;
 
 var read = function(path,cb){
 	if(collection){
-		var fullPath = (path+".@DATE");
+		var fullPath = (path+".@"+KEY.MODIF_DATE);
 		var sort = {};
 		sort[fullPath] = -1;
 		collection.find().sort(sort).limit(1).toArray(function(err, docs) {
@@ -78,7 +80,7 @@ var read = function(path,cb){
 				data = data[paths[part]];
 			}
 			if(data){
-				cb(data["@VALUE"],data["@USER"],data["@DATE"]);
+				cb(data["@"+KEY.VALUE],data["@"+KEY.MODIF_USER],data["@"+KEY.MODIF_DATE]);
 			}else{
 				cb();
 			}
@@ -108,7 +110,7 @@ var readOld = function(path,date,cb){
 			for(var part in paths){
 				data = data[paths[part]];
 			}
-			cb(data["@VALUE"],data["@USER"],data["@DATE"]);
+			cb(data["@"+KEY.VALUE],data["@"+KEY.MODIF_USER],data["@"+KEY.MODIF_DATE]);
 		});
 	}else{
 		cb();

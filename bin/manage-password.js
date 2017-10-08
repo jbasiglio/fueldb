@@ -9,7 +9,7 @@ var crypto = require('crypto');
 var users = require('../conf/users.json');
 if(!(process.argv[2] && process.argv[3])){
 	console.log("Usage: 'node manage-password {username} {password}'");
-	return;
+	exit(1);
 }
 var user = process.argv[2];
 var password = process.argv[3];
