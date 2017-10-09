@@ -17,9 +17,9 @@ var verifyURL = function(url){
     }
     var signature = url.query.signature;
     var timestamp = url.query.timestamp;
-    if(new Date().getTime() - parseInt(timestamp) > 2000){
-        throw new Error("You are not allowed to connect");
-    }
+    // if(new Date().getTime() - parseInt(timestamp) > 2000){
+    //     throw new Error("You are not allowed to connect");
+    // }
     var check = url.href.split("&signature=")[0];
     var hash = crypto.createHmac('sha256',accessKeys[apiKey]).update(check).digest('hex');
     if(hash !== signature){

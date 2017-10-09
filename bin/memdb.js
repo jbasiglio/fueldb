@@ -6,7 +6,7 @@
 // var archive = require('./archive.js');
 // var archivePoints = require('../conf/archive.json');
 var KEY = require('./keys.json');
-var groups = require('../conf/groups.json');
+// var groups = require('../conf/groups.json');
 var db = {};
 var reservedPoint = [];
 for(var i in KEY){
@@ -23,15 +23,15 @@ for(var i in KEY){
 // 	});
 // });
 
-function getGroupsFromUser(apiKey){
-	var values = [];
-	for(var group in groups){
-		if(groups[groups].indexOf(apiKey)>=0){
-			values.push(group);
-		}
-	}
-	return values;
-}
+// function getGroupsFromUser(apiKey){
+// 	var values = [];
+// 	for(var group in groups){
+// 		if(groups[groups].indexOf(apiKey)>=0){
+// 			values.push(group);
+// 		}
+// 	}
+// 	return values;
+// }
 
 function format(point){
 	return {

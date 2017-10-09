@@ -61,6 +61,8 @@ app.use(cors());
 app.use('/static', express.static('static'))
 
 app.use(bodyParser.json());
+app.use(bodyParser.text({ type: 'text/plain' }));
+
 app.use('/rest', function (request, response, next) {
 	var url = urlParse.parse(request.url, true);
 	try {
@@ -86,7 +88,7 @@ app.use('/rest', function (request, response) {
 	var obj = { point: path };
 	obj.apiKey = url.query.apiKey;
 	obj.date = url.query.date;
-	obj.value = request.body.value;
+	obj.value = request.body;
 	response.onPushed = function (obj) {
 		response.status(200);
 		if (obj) {
