@@ -3,8 +3,8 @@
  * Copyright(c) 2014 Joris Basiglio <joris.basiglio@wonderfuel.io>
  * MIT Licensed
  */
-var archive = require('./archive.js');
-var archivePoints = require('../conf/archive.json');
+// var archive = require('./archive.js');
+// var archivePoints = require('../conf/archive.json');
 var KEY = require('./keys.json');
 var groups = require('../conf/groups.json');
 var db = {};
@@ -13,15 +13,15 @@ for(var i in KEY){
 	reservedPoint.push("."+KEY[i]);
 }
 
-archive.init(function(){
-	archivePoints.forEach(function(point){
-		archive.read(point,function(value,apiKey,date){
-			if(value && apiKey && date){
-				writeNoArch(point,value,apiKey,date);
-			}
-		})
-	});
-});
+// archive.init(function(){
+// 	archivePoints.forEach(function(point){
+// 		archive.read(point,function(value,apiKey,date){
+// 			if(value && apiKey && date){
+// 				writeNoArch(point,value,apiKey,date);
+// 			}
+// 		})
+// 	});
+// });
 
 function getGroupsFromUser(apiKey){
 	var values = [];
@@ -105,9 +105,9 @@ exports.write = function(path, value, apiKey, now){
 		now = new Date();
 	}
 	writeNoArch(path, value, apiKey, now);
-    if(archivePoints.indexOf(path) !== -1){
-	    archive.insert(path,value,apiKey,now);
-    }
+    // if(archivePoints.indexOf(path) !== -1){
+	//     archive.insert(path,value,apiKey,now);
+    // }
 };
 
 exports.browse = function(path,cb){
@@ -128,6 +128,6 @@ exports.browse = function(path,cb){
 	return result;
 };
 
-exports.readArchive = function(path,date,cb){
-	archive.readOld(path,date,cb);
-};
+// exports.readArchive = function(path,date,cb){
+// 	archive.readOld(path,date,cb);
+// };

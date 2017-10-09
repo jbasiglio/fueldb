@@ -29,7 +29,7 @@
         };
         var fuelDB = new FuelDB(opt);
         var pattern = new RegExp("^\\w+(\\.\\w+)*$");
-        function computeURL(point,browse,archive,date,apiKey,apiSecret){
+        function computeURL(point,browse,apiKey,apiSecret){
             if(!browse && (!point || point == "")){
                 throw "Point can't be empty for a read request";
             }

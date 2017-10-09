@@ -52,7 +52,7 @@ HTTP_METHOD.GET = "read";
 HTTP_METHOD.PUT = "set";
 HTTP_METHOD.DELETE = "remove";
 HTTP_METHOD.GET_BROWSE = "browse";
-HTTP_METHOD.GET_ARCHIVE = "readArchive";
+// HTTP_METHOD.GET_ARCHIVE = "readArchive";
 
 const app = express();
 var expressWs = require('express-ws')(app);
@@ -78,9 +78,9 @@ app.use('/rest', function (request, response) {
 	if (request.method === "GET" && url.query.type === "browse") {
 		request.method = "GET_BROWSE";
 	}
-	else if (request.method === "GET" && url.query.type === "archive") {
-		request.method = "GET_ARCHIVE";
-	}
+	// else if (request.method === "GET" && url.query.type === "archive") {
+	// 	request.method = "GET_ARCHIVE";
+	// }
 	var path = url.pathname.split("/");
 	path = path.slice(1, path.length).join(".");
 	var obj = { point: path };
@@ -251,17 +251,17 @@ functions.read = function read(obj, ws) {
 	}
 };
 
-functions.readArchive = function readArchive(obj, ws) {
-	delete obj.apiKey;
-	db.readArchive(obj.point, new Date(obj.date), function (value, apiKey, date) {
-		obj.value = value;
-		obj.apiKey = apiKey;
-		obj.date = date;
-		if (ws) {
-			ws.onPushed(obj);
-		}
-	})
-};
+// functions.readArchive = function readArchive(obj, ws) {
+// 	delete obj.apiKey;
+// 	db.readArchive(obj.point, new Date(obj.date), function (value, apiKey, date) {
+// 		obj.value = value;
+// 		obj.apiKey = apiKey;
+// 		obj.date = date;
+// 		if (ws) {
+// 			ws.onPushed(obj);
+// 		}
+// 	})
+// };
 
 functions.browse = function browse(obj, ws) {
 	delete obj.apiKey;
