@@ -1,15 +1,14 @@
-FROM    node:latest
+FROM node:8.6.0
+
+RUN mkdir -p /usr/src/app
+WORKDIR /usr/src/app
 
 # Bundle app source
-COPY . /opt/fueldb
+COPY . /usr/src/app
 
-WORKDIR /opt/fueldb
 # Install app dependencies
-RUN npm install
+RUN npm --no-color install -q --production
 
-EXPOSE  8101
-EXPOSE  8102
-EXPOSE  8103
-EXPOSE  8104
+EXPOSE 0-65535
 
-CMD ["npm", "start"]
+CMD ["node", "server.js"]

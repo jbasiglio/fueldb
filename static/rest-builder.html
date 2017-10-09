@@ -9,40 +9,34 @@
     
     <br />
     <div>
-        <input id="user" placeholder="User" type="text" onkeyup="build()"/>
-        <input id="password" placeholder="Password" type="password" onkeyup="build()"/>
+        <input id="apiKey" placeholder="User" type="text" onkeyup="build()"/>
+        <input id="apiSecret" placeholder="Password" type="apiSecret" onkeyup="build()"/>
         <br/>
         Point: <input id="point" placeholder="point" type="text" onkeyup="build()"/>
-        <input id="read" type="radio" onclick="check(['browse','archive'])" checked/>Read
-        <input id="browse" type="radio" onclick="check(['read','archive'])" />Browse
-		<input id="archive" type="radio" onclick="check(['read','browse'])" />Archive
+        <input id="read" type="radio" onclick="check(['browse'])" checked/>Read
+        <input id="browse" type="radio" onclick="check(['read'])" />Browse
+		<!-- <input id="archive" type="radio" onclick="check(['read','browse'])" />Archive
 		<br/>
-		Date: <input id="date" placeholder="Unix epoch" type="number" onkeyup="build()"/>
+		Date: <input id="date" placeholder="Unix epoch" type="number" onkeyup="build()"/> -->
         <br/>
         <a id="link" href="#" target="_blank">Fill the fields</a>
     </div>
     <script type="text/javascript" src="/static/fueldb.js"></script>
     <script type="text/javascript">
+        var opt = {
+            apiKey: "admin",
+            apiSecret: "admin"
+        };
+        var fuelDB = new FuelDB(opt);
         var pattern = new RegExp("^\\w+(\\.\\w+)*$");
-        function computeURL(point,browse,archive,date,user,password){
+        function computeURL(point,browse,archive,date,apiKey,apiSecret){
             if(!browse && (!point || point == "")){
                 throw "Point can't be empty for a read request";
             }
             if(!pattern.test(point) && !(browse && point == "")){
                 throw "Point is not valid";
             }
-            if(point.indexOf("api.") == 0){
-                throw "'api' is a reserved point";
-            }
-            var toSign = "/"+(point ? point.split(".").join("/"):"")+"?timestamp="+new Date().getTime()+"&user="+user;
-            toSign += browse ? "&type=browse":"";
-			if(archive){
-				toSign += "&type=archive";
-				toSign += "&date="+date;
-			}
-            var key = CryptoJS.HmacSHA256(password,user)+"";
-            var sign = CryptoJS.HmacSHA256(toSign,key);
-            return toSign+"&signature="+sign;
+            return fuelDB.computeURL(point,browse,apiKey,apiSecret);
         };
         
         function check(ids){
@@ -54,17 +48,17 @@
         }
         
         function build(){
-            var user = document.getElementById("user").value;
-            var password = document.getElementById("password").value;
+            var apiKey = document.getElementById("apiKey").value;
+            var apiSecret = document.getElementById("apiSecret").value;
             var point = document.getElementById("point").value;
             var link = document.getElementById("link");
             var read = document.getElementById("read").checked;
             var browse = document.getElementById("browse").checked;
-			var archive = document.getElementById("archive").checked;
-			var date =  document.getElementById("date").value
+			// var archive = document.getElementById("archive").checked;
+			// var date =  document.getElementById("date").value
             var url;
             try {
-                url = computeURL(point,browse,archive,date,user,password);
+                url = computeURL(point,browse,apiKey,apiSecret);
             }catch(e){
                 link.href = "#";
                 link.innerHTML = e;

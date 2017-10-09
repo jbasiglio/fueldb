@@ -21,7 +21,7 @@
     "url": "https://github.com/unnamed38/fueldb.git"
   },
   "scripts": {
-    "start": "node bin/server.js"
+    "start": "node server.js"
   },
   "engines": {
     "node": ">= 0.6.0",
@@ -33,6 +33,7 @@
     "cors": "*",
     "body-parser": "*",
     "express-ws": "*",
+    "commander": "*",
     "mongodb": "*"
   },
   "devDependencies": {},

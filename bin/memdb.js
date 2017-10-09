@@ -12,22 +12,21 @@ var reservedPoint = [];
 for(var i in KEY){
 	reservedPoint.push("."+KEY[i]);
 }
-//var reservedPoint = [".VALUE",".DATE",".USER"];
 
 archive.init(function(){
 	archivePoints.forEach(function(point){
-		archive.read(point,function(value,user,date){
-			if(value && user && date){
-				writeNoArch(point,value,user,date);
+		archive.read(point,function(value,apiKey,date){
+			if(value && apiKey && date){
+				writeNoArch(point,value,apiKey,date);
 			}
 		})
 	});
 });
 
-function getGroupsFromUser(user){
+function getGroupsFromUser(apiKey){
 	var values = [];
 	for(var group in groups){
-		if(groups[groups].indexOf(user)>=0){
+		if(groups[groups].indexOf(apiKey)>=0){
 			values.push(group);
 		}
 	}
@@ -37,7 +36,7 @@ function getGroupsFromUser(user){
 function format(point){
 	return {
 		"value":(point && point["."+KEY.VALUE]) ? point["."+KEY.VALUE] : "",
-		"user":(point && point["."+KEY.MODIF_USER]) ? point["."+KEY.MODIF_USER] : "",
+		"apiKey":(point && point["."+KEY.MODIF_USER]) ? point["."+KEY.MODIF_USER] : "",
 		"date":(point && point["."+KEY.MODIF_DATE]) ? point["."+KEY.MODIF_DATE] : ""
 	};
 }
@@ -88,26 +87,26 @@ function getPoint(path){
 	return [point, newPoint];
 }
 
-var writeNoArch = function(path, value, user, now){
+var writeNoArch = function(path, value, apiKey, now){
 	var retVal = getPoint(path);
 	var point = retVal[0];
 	var newPoint = retVal[1];
 	point["."+KEY.VALUE] = value;
-	point["."+KEY.MODIF_USER] = user;
+	point["."+KEY.MODIF_USER] = apiKey;
 	point["."+KEY.MODIF_DATE] = now.toISOString();
 	if(newPoint){
-		point["."+KEY.CREATE_USER] = user;
+		point["."+KEY.CREATE_USER] = apiKey;
 		point["."+KEY.CREATE_DATE] = now.toISOString();
 	}
 };
 
-exports.write = function(path, value, user, now){
+exports.write = function(path, value, apiKey, now){
 	if(!now){
 		now = new Date();
 	}
-	writeNoArch(path, value, user, now);
+	writeNoArch(path, value, apiKey, now);
     if(archivePoints.indexOf(path) !== -1){
-	    archive.insert(path,value,user,now);
+	    archive.insert(path,value,apiKey,now);
     }
 };
 

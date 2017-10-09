@@ -44,8 +44,8 @@ function FuelDB(target) {
 	var _ssl;
 	var _wsUri;
 	// var _httpUri;
-	var _user;
-	var _password;
+	var _apiKey;
+	var _apiSecret;
 	var _noTimeoutCmd = ["subscribe"];
 	var _subscribeEvent = {};
 	var _events = {};
@@ -84,9 +84,9 @@ function FuelDB(target) {
 	this.connect = function (target) {
 		_uri = (target && target.uri) ? target.uri : scriptSource.host;
 		_ssl = (target && target.ssl !== undefined) ? target.ssl : scriptSource.ssl;
-		_user = (target && target.user) ? target.user : _user;
-		_password = (target && target.password) ? target.password : _password;
-		_wsUri = "ws"+(_ssl?"s":"")+"://"+_user+":"+_password+"@"+_uri;
+		_apiKey = (target && target.apiKey) ? target.apiKey : _apiKey;
+		_apiSecret = (target && target.apiSecret) ? target.apiSecret : _apiSecret;
+		_wsUri = "ws"+(_ssl?"s":"")+"://"+_uri;
 		// _httpUri = "http"+(_ssl?"s":"")+"://"+_uri;
 		_onConnect = (target && target.onConnected) ? target.onConnected : _onConnect;
 		_onDisconnect = (target && target.onDisconnected) ? target.onDisconnected : _onDisconnect;
@@ -333,12 +333,16 @@ function FuelDB(target) {
 		_onDisconnect = fct;
 	};
 
-	var _computeURL = function(point){
-		var toSign = "/ws/"+(point ? point.split(".").join("/"):"")+"?timestamp="+new Date().getTime()+"&user="+_user;
-		var key = CryptoJS.HmacSHA256(_password,_user)+"";
-		var sign = CryptoJS.HmacSHA256(toSign,key);
-		return toSign+"&signature="+sign;
+	var _computeURL = function(point, browse, apiKey, apiSecret){
+		apiKey = apiKey ? apiKey : _apiKey;
+		apiSecret = apiSecret ? apiSecret : _apiSecret;
+		var toSign = "/"+(point ? point.split(".").join("/"):"")+"?timestamp="+new Date().getTime()+"&apiKey="+apiKey;
+		toSign += browse ? "&type=browse":"";
+		console.log(toSign);
+		var sign = CryptoJS.HmacSHA256(toSign,apiSecret).toString();
+		return (point ? "/rest" : "/ws" )+toSign+"&signature="+sign;
 	};
+	this.computeURL = _computeURL;
 	
 	var _id = 0;
 	var uid = function () {

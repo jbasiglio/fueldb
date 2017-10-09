@@ -23,7 +23,7 @@ The defaut user/password is admin/admin, to create a new one use this command:
 
 `node bin/manage-password {username} {password}`
 
-If the user already exists, it only changes his password. To delete one, simply remove it from config/users.json
+If the user already exists, it only changes his password. To delete one, simply remove it from config/accessKeys.json
 
 ### Run ###
 
